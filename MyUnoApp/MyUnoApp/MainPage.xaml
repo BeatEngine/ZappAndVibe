@@ -1,0 +1,86 @@
+﻿<Page x:Class="MyUnoApp.MainPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:MyUnoApp"
+      xmlns:d="http://schemas.microsoft.com"
+      xmlns:mc="http://schemas.openxmlformats.org"
+      mc:Ignorable="d"
+      Background="#121212"> <!-- Dunkler Hintergrund für die gesamte Seite -->
+
+<Page.Resources>
+  <local:StatusColorConverter x:Key="StatusColorConverter" />
+</Page.Resources>
+
+
+    <Grid RowDefinitions="Auto, *">
+        
+        <!-- OBERER BEREICH: Switch Button -->
+        <StackPanel Grid.Row="0" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center" 
+                    Padding="20,10">
+            <TextBlock Text="Aktivieren" 
+                       VerticalAlignment="Center" 
+                       Foreground="White" 
+                       FontSize="20"
+                       Margin="0,0,10,0" />
+            
+            <ToggleSwitch AutomationProperties.AutomationId="ActivateSwitch"
+              OnContent=""
+              OffContent="" 
+              MinWidth="0">
+    <ToggleSwitch.Resources>
+        <!-- 1. DER REGLER (KNOPF) -->
+        <SolidColorBrush x:Key="ToggleSwitchThumbBackgroundOff" Color="#00FF00" />
+        <SolidColorBrush x:Key="ToggleSwitchThumbBackgroundOn" Color="#006600" />
+
+        <!-- 2. DAS GEHÄUSE (HINTERGRUND DES SCHALTERS) -->
+        <!-- Hintergrund im AUS-Zustand -->
+        <SolidColorBrush x:Key="ToggleSwitchFillOff" Color="#006600" />
+        <!-- Hintergrund im AN-Zustand (Das löscht das BLAU) -->
+        <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#008800" />
+
+        <!-- 3. RAHMEN (STROKE) -->
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOff" Color="#005500" />
+        <SolidColorBrush x:Key="ToggleSwitchStrokeOn" Color="#00FF00" />
+
+        <!-- 4. HOVER-EFFEKTE (Wenn man mit der Maus drüber geht) -->
+        <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#004400" />
+        <SolidColorBrush x:Key="ToggleSwitchThumbBackgroundOnPointerOver" Color="White" />
+    </ToggleSwitch.Resources>
+</ToggleSwitch>
+            
+        </StackPanel>
+
+        <!-- HAUPTBEREICH: Liste -->
+        <ListView x:Name="UserList" Grid.Row="1" Padding="10" SelectionMode="None">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="local:UserItem">
+                    <!-- Der Hintergrund wird im Designer angepasst -->
+                    <Border Margin="0,5" 
+                            Padding="10" 
+                            CornerRadius="12" 
+                            Background="{x:Bind IsOnline, Converter={StaticResource StatusColorConverter}, Mode=OneWay}">
+                        
+                        <Grid ColumnDefinitions="Auto, *">
+                            <!-- Rundes Bild via CornerRadius -->
+                            <Border Grid.Column="0" 
+                                    Width="50" 
+                                    Height="50" 
+                                    CornerRadius="25" 
+                                    Background="#333333" 
+                                    Margin="0,0,15,0">
+                                <Image Source="{x:Bind ImageUrl}" Stretch="UniformToFill" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind Name}" Foreground="White" FontWeight="Bold" FontSize="16" />
+                                <TextBlock Text="{x:Bind Age}" Foreground="#AAAAAA" FontSize="14" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</Page>
