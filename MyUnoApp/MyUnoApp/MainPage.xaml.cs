@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace MyUnoApp;
 
 public sealed partial class MainPage : Page
@@ -7,8 +9,13 @@ public sealed partial class MainPage : Page
 
         this.InitializeComponent();
         UserList.ItemsSource = new List<UserItem> {
-            new UserItem("Test1", "23", "https://via.placeholder.com") { IsOnline = true },
-            new UserItem("Test2", "25", "https://via.placeholder.com") { IsOnline = false }
         };
+
+        WifiBridge.OnUserDiscovered = (name, age) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
+            ((List<UserItem>)UserList.ItemsSource).Add(new UserItem(name, age, "") { IsOnline = true });
+        };
+
     }
 }
