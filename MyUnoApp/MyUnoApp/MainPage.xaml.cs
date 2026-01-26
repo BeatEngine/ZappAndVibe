@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Reflection.Metadata;
 
 namespace MyUnoApp;
 
@@ -6,9 +7,10 @@ public sealed partial class MainPage : Page
 {
     public MainPage()
     {
-           
+
         this.InitializeComponent();
-        UserList.ItemsSource = new List<UserItem> {
+        UserList.ItemsSource = new List<UserItem>
+        {
         };
 
         WifiBridge.OnUserDiscovered = (name, age) =>
@@ -17,5 +19,11 @@ public sealed partial class MainPage : Page
             ((List<UserItem>)UserList.ItemsSource).Add(new UserItem(name, age, "") { IsOnline = true });
         };
 
+    }
+
+    private void OnStartScanClicked(object sender, RoutedEventArgs e)
+    {
+        WifiBridge.toggleScanning();
+        Headline.Text = "Scanning";
     }
 }

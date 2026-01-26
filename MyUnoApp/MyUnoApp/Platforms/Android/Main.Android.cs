@@ -11,6 +11,8 @@ using Android.Widget;
 using Microsoft.UI.Xaml.Media;
 using Android.Net.Wifi.P2p;
 using Android.Net.Wifi.P2p.Nsd;
+using System.Runtime.Intrinsics.X86;
+using MyUnoApp.Droid; // Namespace Ihres WifiService
 
 namespace MyUnoApp.Droid;
 
@@ -26,21 +28,17 @@ namespace MyUnoApp.Droid;
 
 public class Application : Microsoft.UI.Xaml.NativeApplication
 {
-    static WifiService wifiService;
+    
+    private static bool active = false;
     static Application()
     {
         App.InitializeLogging();
-        wifiService.StartDiscovery((name, age) => 
-        {
-            // Leite die Daten vom Android-WLAN-System an den gemeinsamen Code weiter
-            MyUnoApp.WifiBridge.RaiseUserFound(name, age);
-        });
-        wifiService.StartBroadcasting(MyUnoApp.WifiBridge.name, MyUnoApp.WifiBridge.age);
     }
 
     public Application(IntPtr javaReference, JniHandleOwnership transfer)
         : base(() => new App(), javaReference, transfer)
     {
+
     }
 
 }

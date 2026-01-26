@@ -5,6 +5,7 @@ using Java.Lang;
 namespace MyUnoApp.Droid;
 
 // Die Klasse implementiert das Interface IActionListener
+
 public class SimpleActionListener : Java.Lang.Object, WifiP2pManager.IActionListener
 {
     private readonly string _actionName;

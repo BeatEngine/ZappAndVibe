@@ -19,7 +19,8 @@
                     Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
                     Padding="20,10">
-            <TextBlock Text="Aktivieren" 
+            <TextBlock x:Name="Headline"
+                       Text="Aktivieren" 
                        VerticalAlignment="Center" 
                        Foreground="White" 
                        FontSize="20"
@@ -28,7 +29,9 @@
             <ToggleSwitch AutomationProperties.AutomationId="ActivateSwitch"
               OnContent=""
               OffContent="" 
-              MinWidth="0">
+              MinWidth="0"
+              Toggled="OnStartScanClicked"
+              >
     <ToggleSwitch.Resources>
         <!-- 1. DER REGLER (KNOPF) -->
         <SolidColorBrush x:Key="ToggleSwitchThumbBackgroundOff" Color="#00FF00" />

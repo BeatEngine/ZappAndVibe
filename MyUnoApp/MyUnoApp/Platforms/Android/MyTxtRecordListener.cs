@@ -2,7 +2,6 @@
 using Android.Net.Wifi.P2p;
 
 namespace MyUnoApp.Droid;
-
 public class MyTxtRecordListener : Java.Lang.Object, WifiP2pManager.IDnsSdTxtRecordListener
 {
     private readonly Action<string, string> _onUserFound;

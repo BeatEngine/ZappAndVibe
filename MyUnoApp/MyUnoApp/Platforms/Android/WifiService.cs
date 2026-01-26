@@ -4,8 +4,7 @@ using Android.Net.Wifi.P2p.Nsd;
 using Java.Util;
 
 namespace MyUnoApp.Droid;
-
-public class WifiService
+public class WifiService : Java.Lang.Object, IWifiService
 {
     private WifiP2pManager? _manager;
     private WifiP2pManager.Channel? _channel;
@@ -15,6 +14,12 @@ public class WifiService
     {
         _context = context;
         _manager = (WifiP2pManager?)_context.GetSystemService(Context.WifiP2pService);
+        if (_manager == null)
+        {
+            // Wenn das hier null ist, darf kein weiterer Aufruf folgen!
+            System.Diagnostics.Debug.WriteLine("WLAN P2P wird auf diesem Gerät nicht unterstützt.");
+            return; 
+        }
         if (_manager != null)
         {
             _channel = _manager.Initialize(_context, _context.MainLooper, null);
