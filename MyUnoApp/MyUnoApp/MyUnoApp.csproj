@@ -17,6 +17,8 @@
     <!-- Package Description -->
     <Description>MyUnoApp powered by Uno Platform.</Description>
 
+    <AndroidLinkMode>None</AndroidLinkMode>
+
     <!--
       UnoFeatures are used to quickly add and manage features enabled for your app.
       https://aka.platform.uno/singleproject-features

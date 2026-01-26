@@ -6,7 +6,7 @@ public sealed partial class MainPage : Page
 {
     public MainPage()
     {
-
+           
         this.InitializeComponent();
         UserList.ItemsSource = new List<UserItem> {
         };
