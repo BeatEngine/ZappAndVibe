@@ -43,13 +43,27 @@ public class WifiService : Java.Lang.Object, IWifiService
 
         _manager.AddLocalService(_channel, serviceInfo, new SimpleActionListener("SendActionListener"));
     }
+    
+    
 
-    public void StartDiscovery(Action<string, string> onUserFound)
+    public void StartDiscovery(Action<string, string> onUserFound, Action<string, string> onDeviceFound)
     {
         if (_manager == null || _channel == null) return;
 
         // Listener für DNS-SD Antworten
         _manager.SetDnsSdResponseListeners(_channel, new MyServiceResponseListener(), new MyTxtRecordListener(onUserFound));
+
+        
+
+        // 1. Definiere, was passieren soll, wenn der Receiver ein Signal bekommt
+        var receiver = new WifiDirectBroadcastReceiver(_manager, _channel, onDeviceFound);
+
+        // 2. Registriere den Receiver im Android-System
+        var intentFilter = new IntentFilter();
+        intentFilter.AddAction(WifiP2pManager.WifiP2pPeersChangedAction);
+        _context.RegisterReceiver(receiver, intentFilter);
+
+        _manager.DiscoverPeers(_channel, new SimpleActionListener("PeerDiscovery"));
 
         _manager.AddServiceRequest(_channel, WifiP2pDnsSdServiceRequest.NewInstance(), new SimpleActionListener("DiscoveryActionListenerRequest"));
         _manager.DiscoverServices(_channel, new SimpleActionListener("DiscoveryActionListener"));

@@ -27,7 +27,13 @@ public static class WifiBridge
             {
                 // Leite die Daten vom Android-WLAN-System an den gemeinsamen Code weiter
                 WifiBridge.RaiseUserFound(name, age);
-            });
+            },
+            (device, mac) =>
+            {
+                // Leite die Daten vom Android-WLAN-System an den gemeinsamen Code weiter
+                WifiBridge.RaiseDeviceFound(device, mac);
+            }
+            );
             wifiService.StartBroadcasting(name, age);
             active = true;
         }
@@ -42,6 +48,16 @@ public static class WifiBridge
         Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()?.TryEnqueue(() =>
         {
             OnUserDiscovered?.Invoke(name, age);
+        });
+    }
+
+    public static void RaiseDeviceFound(string devicename, string mac)
+    {
+        // Wir stellen sicher, dass der Aufruf auf dem UI-Thread landet
+        // (Wichtig für Android, da WLAN-Callbacks oft im Hintergrund laufen)
+        Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()?.TryEnqueue(() =>
+        {
+            OnUserDiscovered?.Invoke(devicename, mac); //##################################todo only for debugging
         });
     }
 

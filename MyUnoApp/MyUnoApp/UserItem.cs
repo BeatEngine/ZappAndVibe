@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace MyUnoApp;
 
 
@@ -19,4 +21,9 @@ public class UserItem : INotifyPropertyChanged
         this.Age = Age;
         this.ImageUrl = image;
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string name) => 
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
 }
