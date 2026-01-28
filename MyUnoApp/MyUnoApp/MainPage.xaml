@@ -18,7 +18,9 @@
         <StackPanel Grid.Row="0" 
                     Orientation="Horizontal" 
                     HorizontalAlignment="Center" 
-                    Padding="20,10">
+                    Padding="20,10"
+                    Margin="0,10,0,0"
+                    >
             <TextBlock x:Name="Headline"
                        Text="Aktivieren" 
                        VerticalAlignment="Center" 

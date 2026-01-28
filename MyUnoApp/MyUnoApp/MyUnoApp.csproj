@@ -17,8 +17,12 @@
     <!-- Package Description -->
     <Description>MyUnoApp powered by Uno Platform.</Description>
 
-    <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidLinkMode>SdkAndUserAssemblies</AndroidLinkMode>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+
+    <PublishTrimmed>true</PublishTrimmed>
+  
+    <TrimMode>partial</TrimMode> 
     
 
     <!--

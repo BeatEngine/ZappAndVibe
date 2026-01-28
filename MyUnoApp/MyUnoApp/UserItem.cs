@@ -1,7 +1,7 @@
 namespace MyUnoApp;
 
 
-public class UserItem
+public class UserItem : INotifyPropertyChanged
 {
     public string Name { get; set; } = string.Empty;
     public string Age { get; set; } = string.Empty;
