@@ -13,7 +13,6 @@ public sealed partial class MainPage : Page
         UserList.ItemsSource = new ObservableCollection<UserItem>();
         {
         };
-        WifiBridge.initNames();
         WifiBridge.OnUserDiscovered = (name, age) =>
         {
             System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");

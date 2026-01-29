@@ -28,6 +28,33 @@ public class WifiService : Java.Lang.Object, IWifiService
         }
     }
 
+
+    public (string, string) initNames()
+    {
+        // In deinem Android-Projekt oder via #if __ANDROID__
+        var deviceName = Android.Provider.Settings.Global.GetString(
+            _context.ContentResolver,
+            "device_name"
+        );
+
+        // Falls das null ist (je nach Hersteller), nimm den Bluetooth-Namen:
+        if (string.IsNullOrEmpty(deviceName))
+        {
+            deviceName = Android.Provider.Settings.Secure.GetString(
+                _context.ContentResolver,
+                "bluetooth_name"
+            );
+        }
+        string name = "";
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            name = deviceName;
+        }
+        string age = "Android " + Android.OS.Build.VERSION.Release;
+        return (name, age);
+    }
+
     private Action<string, string> _onUserFound;
     private bool _isLoopRunning = false;
 

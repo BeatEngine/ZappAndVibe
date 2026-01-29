@@ -13,29 +13,11 @@ public static class WifiBridge
 
     public static bool active = false;
 
-    public static initNames()
+    public static void initNames()
     {
-        // In deinem Android-Projekt oder via #if __ANDROID__
-        var deviceName = Android.Provider.Settings.Global.GetString(
-            _context.ContentResolver,
-            "device_name"
-        );
-
-        // Falls das null ist (je nach Hersteller), nimm den Bluetooth-Namen:
-        if (string.IsNullOrEmpty(deviceName))
-        {
-            deviceName = Android.Provider.Settings.Secure.GetString(
-                _context.ContentResolver,
-                "bluetooth_name"
-            );
-        }
-
-        if (!string.IsNullOrEmpty(deviceName))
-        {
-            name = deviceName;
-        }
-        age = "Android " + Android.OS.Build.VERSION.Release;
-
+        ValueTuple<string, string> res = wifiService.initNames();
+        name = res.Item1;
+        age = res.Item2;
     }
 
     public static IWifiService wifiService { get; set; }
@@ -48,6 +30,8 @@ public static class WifiBridge
         }
         else
         {
+            initNames();
+
             wifiService.StartDiscovery((name, age) =>
             {
                 // Leite die Daten vom Android-WLAN-System an den gemeinsamen Code weiter
