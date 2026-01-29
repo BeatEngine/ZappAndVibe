@@ -15,7 +15,7 @@
     <!-- Package Publisher -->
     <ApplicationPublisher>beatengine</ApplicationPublisher>
     <!-- Package Description -->
-    <Description>MyUnoApp powered by Uno Platform.</Description>
+    <Description>Zapp and Vibe makes dating easy.</Description>
 
     <AndroidLinkMode>SdkAndUserAssemblies</AndroidLinkMode>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
@@ -32,6 +32,12 @@
     <UnoFeatures>
       SkiaRenderer;
     </UnoFeatures>
+  </PropertyGroup>
+
+  <!-- 2. Spezieller Block NUR für Android -->
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+      <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+      <TargetSdkVersion>33</TargetSdkVersion>
   </PropertyGroup>
 
 </Project>

@@ -5,13 +5,38 @@ namespace MyUnoApp;
 public static class WifiBridge
 {
 
-    public static string name = "test1";
-    public static string age = "age";
+    public static string name = "test-";
+    public static string age = "26";
     public static string image = "";
     // Die MainPage abonniert dies, um Daten zu empfangen
     public static Action<string, string>? OnUserDiscovered;
 
     public static bool active = false;
+
+    public static initNames()
+    {
+        // In deinem Android-Projekt oder via #if __ANDROID__
+        var deviceName = Android.Provider.Settings.Global.GetString(
+            _context.ContentResolver,
+            "device_name"
+        );
+
+        // Falls das null ist (je nach Hersteller), nimm den Bluetooth-Namen:
+        if (string.IsNullOrEmpty(deviceName))
+        {
+            deviceName = Android.Provider.Settings.Secure.GetString(
+                _context.ContentResolver,
+                "bluetooth_name"
+            );
+        }
+
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            name = deviceName;
+        }
+        age = "Android " + Android.OS.Build.VERSION.Release;
+
+    }
 
     public static IWifiService wifiService { get; set; }
 
@@ -34,7 +59,6 @@ public static class WifiBridge
                 WifiBridge.RaiseDeviceFound(device, mac);
             }
             );
-            wifiService.StartBroadcasting(name, age);
             active = true;
         }
 
