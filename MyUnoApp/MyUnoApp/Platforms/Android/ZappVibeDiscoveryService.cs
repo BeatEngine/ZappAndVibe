@@ -5,7 +5,7 @@ using Android.Runtime;        // Falls du Java-Interoperabilität brauchst
 using Android.Net.Wifi;       // Für WifiManager und WifiLock
 
 
-[Service(Enabled = true, ForegroundServiceType = Android.Content.PM.ForegroundService.TypeConnectedDevice)]
+[Service(Enabled = true, Exported = false, ForegroundServiceType = Android.Content.PM.ForegroundService.TypeConnectedDevice)]
 public class ZappVibeDiscoveryService : Service
 {
     private const int NOTIFICATION_ID = 1001;
@@ -49,6 +49,7 @@ public class ZappVibeDiscoveryService : Service
         var notification = new Notification.Builder(this, CHANNEL_ID)
             .SetContentTitle("ZappVibe Discovery")
             .SetContentText("Near people can see your profile")
+            .SetSmallIcon(MyUnoApp.Resource.Drawable.notification)
             .SetOngoing(true)
             .Build();
 

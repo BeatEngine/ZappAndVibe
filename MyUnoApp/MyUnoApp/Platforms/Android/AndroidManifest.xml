@@ -10,4 +10,8 @@
                   android:usesPermissionFlags="neverForLocation" />
   <!-- WIFI in Background -->
   <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
 </manifest>

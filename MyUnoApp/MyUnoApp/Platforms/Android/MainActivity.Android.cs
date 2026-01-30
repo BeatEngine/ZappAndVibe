@@ -27,7 +27,8 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
         {
             RequestPermissions(new string[] {
                 "android.permission.NEARBY_WIFI_DEVICES",
-                "android.permission.ACCESS_FINE_LOCATION"
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.POST_NOTIFICATIONS"
             }, 123);
         }
 
