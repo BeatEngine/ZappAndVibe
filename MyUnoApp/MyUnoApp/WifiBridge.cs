@@ -26,7 +26,9 @@ public static class WifiBridge
     {
         if (active)
         {
-
+            wifiService.StopBroadcasting();
+            wifiService.StopDiscovery();
+            active = false;
         }
         else
         {
@@ -43,6 +45,7 @@ public static class WifiBridge
                 WifiBridge.RaiseDeviceFound(device, mac);
             }
             );
+            wifiService.StartBroadcasting(name, age);
             active = true;
         }
 
