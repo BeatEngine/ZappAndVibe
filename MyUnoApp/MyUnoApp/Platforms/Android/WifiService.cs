@@ -27,6 +27,11 @@ public class WifiService : Java.Lang.Object, IWifiService
         {
             _channel = _manager.Initialize(_context, _context.MainLooper, null);
         }
+
+        // Start Service for unsing WIFI in Background
+        Intent intent = new Intent(context, typeof(ZappVibeDiscoveryService));
+        context.StartForegroundService(intent);
+
     }
 
 
@@ -62,6 +67,7 @@ public class WifiService : Java.Lang.Object, IWifiService
     public void StartDiscovery(Action<string, string> onUserFound, Action<string, string> onDeviceFound)
     {
         if (_manager == null || _channel == null) return;
+        ZappVibeDiscoveryService.service.ActivateBackgroundWIFI();
 
         _onUserFound = onUserFound;
 
@@ -170,6 +176,7 @@ public class WifiService : Java.Lang.Object, IWifiService
     
     public void StopDiscovery()
     {
+        ZappVibeDiscoveryService.service.ReleaseBackgroundWIFI();
         // 1. Loop-Flag setzen, damit keine neuen Tasks gestartet werden
         _isLoopRunning = false;
 
