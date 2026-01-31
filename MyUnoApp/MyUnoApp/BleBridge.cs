@@ -36,6 +36,8 @@ public class BleBridge
         }
         else
         {
+            initNames();
+            androidUtil.checkRequirementsBLEDiscovery();
             bleService.StartBleAdvertiser(name, age);
             bleService.StartBleScan(OnUserDiscovered);
             active = true;

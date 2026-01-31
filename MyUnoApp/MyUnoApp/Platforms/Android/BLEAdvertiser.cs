@@ -42,7 +42,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         bluetoothManager = (BluetoothManager)_context.GetSystemService(Context.BluetoothService);
         adapter = bluetoothManager.Adapter;
 
-        adapter.SetName(name);
+        //adapter.SetName(name);
 
         advertiser = adapter.BluetoothLeAdvertiser;
 
@@ -55,12 +55,18 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
             .Build();
 
         // Manufacturer Data: Age = 25
-        byte[] ageData = System.Text.Encoding.UTF8.GetBytes(age);
-
+        string text = name + "|" + age;
+        if(text.Length > 24)
+        {
+            text = text.Substring(0, 24);
+        }
+        byte[] ageData = System.Text.Encoding.UTF8.GetBytes(text);
+        
         var data = new AdvertiseData.Builder()
             .AddManufacturerData(0x1234, ageData) // 0x1234 = eigene App-ID
-            .SetIncludeDeviceName(true)
+            .SetIncludeDeviceName(false)
             .Build();
+
         Console.WriteLine("Starting BLE advertiser");
         advertiser.StartAdvertising(settings, data, callback);
     }

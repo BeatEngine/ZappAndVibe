@@ -45,6 +45,7 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
             // Jetzt klappt die Zuweisung, da WifiService das Interface implementiert
             //MyUnoApp.WifiBridge.wifiService = wifiService;
             MyUnoApp.BleBridge.bleService = new BLEAdvertiser(this);
+            MyUnoApp.BleBridge.androidUtil = new AndroidUtil(this);
         }
         catch (Exception ex)
         {

@@ -9,4 +9,5 @@ namespace MyUnoApp;
 public interface IAndroidUtil
 {
     (string, string) initNames();
+    void checkRequirementsBLEDiscovery();
 }
