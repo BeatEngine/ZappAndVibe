@@ -1,18 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
 using Android.App;
 using Android.Content;
+using Android.Net.Wifi.P2p;
+using Android.Net.Wifi.P2p.Nsd;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using Microsoft.UI.Xaml.Media;
-using Android.Net.Wifi.P2p;
-using Android.Net.Wifi.P2p.Nsd;
-using System.Runtime.Intrinsics.X86;
-using MyUnoApp.Droid; // Namespace Ihres WifiService
+using MyUnoApp.Droid;
+using MyUnoApp.Platforms.Android; // Namespace Ihres WifiService
 
 namespace MyUnoApp.Droid;
 
@@ -38,7 +39,7 @@ public class Application : Microsoft.UI.Xaml.NativeApplication
     public Application(IntPtr javaReference, JniHandleOwnership transfer)
         : base(() => new App(), javaReference, transfer)
     {
-
+        
     }
 
 }

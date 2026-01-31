@@ -13,7 +13,7 @@ public sealed partial class MainPage : Page
         UserList.ItemsSource = new ObservableCollection<UserItem>();
         {
         };
-        WifiBridge.OnUserDiscovered = (name, age) =>
+        BleBridge.OnUserDiscovered = (name, age) =>
         {
             System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
             ((ObservableCollection<UserItem>)UserList.ItemsSource).Add(new UserItem(name, age, "") { IsOnline = true });
@@ -23,7 +23,7 @@ public sealed partial class MainPage : Page
 
     private void OnStartScanClicked(object sender, RoutedEventArgs e)
     {
-        WifiBridge.toggleScanning();
+        BleBridge.toggleScanning();
         Headline.Text = "Scanning";
     }
 }
