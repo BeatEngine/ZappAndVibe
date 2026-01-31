@@ -2,6 +2,7 @@ using Android.Content;
 using Android.Net.Wifi.P2p;
 using Android.Net.Wifi.P2p.Nsd;
 using Java.Util;
+using static Java.Util.Jar.Attributes;
 
 namespace MyUnoApp.Droid;
 
@@ -58,6 +59,7 @@ public class WifiService : Java.Lang.Object, IWifiService
             name = deviceName;
         }
         string age = "Android " + Android.OS.Build.VERSION.Release;
+        Console.WriteLine("This name is " + name + " " + age);
         return (name, age);
     }
 
@@ -86,6 +88,7 @@ public class WifiService : Java.Lang.Object, IWifiService
         // 3. Den Loop starten
         if (!_isLoopRunning)
         {
+            Console.WriteLine("Starting discovery");
             _isLoopRunning = true;
             RestartDiscoveryLoop();
         }
@@ -96,32 +99,36 @@ public class WifiService : Java.Lang.Object, IWifiService
         if (_manager == null || _channel == null || !_isLoopRunning) return;
 
         // Erst aufräumen, um "Busy" Fehler zu vermeiden
-        _manager.ClearServiceRequests(_channel, new SimpleActionListener("ClearReq", () =>
-        {
 
+        Action anyAction = () =>
+        {
             var request = WifiP2pDnsSdServiceRequest.NewInstance();
 
             _manager.AddServiceRequest(_channel, request, new SimpleActionListener("AddReq", () =>
             {
-
                 _manager.DiscoverServices(_channel, new SimpleActionListener("DiscServices", () =>
                 {
                     // Scan läuft jetzt für ca. 2 Min. 
                     // Wir starten ihn alle 45 Sek neu, um "frisch" zu bleiben.
-                    Task.Delay(45000).ContinueWith(_ =>
+                    Console.WriteLine("Discovery started");
+                    Task.Delay(30000).ContinueWith(_ =>
                     {
                         if (_isLoopRunning) RestartDiscoveryLoop();
                     });
                 }, () =>
                 {
                     // Falls besetzt (Error 2), schnell neu versuchen
-                    Task.Delay(5000).ContinueWith(_ =>
+                    Console.WriteLine("Discovery busy");
+                    Task.Delay(3000).ContinueWith(_ =>
                     {
                         if (_isLoopRunning) RestartDiscoveryLoop();
                     });
                 }));
             }));
-        }));
+        };
+
+        SimpleActionListener clearReq = new SimpleActionListener("ClearReq", anyAction, anyAction);
+        _manager.ClearServiceRequests(_channel, clearReq);
     }
 
     private bool _isBroadcasting = false;
@@ -130,14 +137,12 @@ public class WifiService : Java.Lang.Object, IWifiService
     {
         _isBroadcasting = true;
 
-        while (_isBroadcasting)
+        if (_isBroadcasting && _manager != null)
         {
-            if (_manager == null || _channel == null) break;
+            //if (_manager == null || _channel == null) break;
 
-            // 1. Alten Service entfernen, um Platz für das Update zu machen
-            _manager.ClearLocalServices(_channel, new SimpleActionListener("ClearLocal", () =>
+            Action anyAction = () =>
             {
-
                 // 2. Neue Daten verpacken
                 var record = new Dictionary<string, string> {
                     { "userName", name },
@@ -152,12 +157,22 @@ public class WifiService : Java.Lang.Object, IWifiService
                 );
 
                 // 3. Service neu registrieren
-                _manager.AddLocalService(_channel, serviceInfo, new SimpleActionListener("AddLocal"));
-            }));
+                _manager.AddLocalService(_channel, serviceInfo, new SimpleActionListener("AddLocal", () => { Console.WriteLine("Started broadcast service"); },
+                    () => {
+                    Task.Delay(3000).ContinueWith(_ =>
+                    { if (_isBroadcasting) { StartBroadcastingLoop(name, age); 
+                        } 
+                    });
+                    }
+                    ));
+            };
+
+            // 1. Alten Service entfernen, um Platz für das Update zu machen
+            _manager.ClearLocalServices(_channel, new SimpleActionListener("ClearLocal", anyAction, anyAction));
 
             // 2 Sekunden warten bis zum nächsten Refresh (falls nötig)
             // Hinweis: 10-30 Sekunden sind für die Batterie & Stabilität besser.
-            await Task.Delay(60000);
+            //await Task.Delay(60000);
         }
     }
 
@@ -201,49 +216,4 @@ public class WifiService : Java.Lang.Object, IWifiService
         }
     }
 
-
-    /*public void StartBroadcasting(string name, string age)
-    {
-        //StartBeaconMode(name, age);
-         if (_manager == null || _channel == null) return;
-
-        // Daten in TXT-Record verpacken (Java Dictionary nutzen)
-        var record = new Dictionary<string, string>();
-        record.Add("userName", name);
-        record.Add("userAge", age);
-
-        var serviceInfo = WifiP2pDnsSdServiceInfo.NewInstance(
-            "ZappVibe_" + Guid.NewGuid().ToString().Substring(0, 5), // Eindeutiger Name
-            "_presence._tcp",
-            record
-        );
-
-        _manager.AddLocalService(_channel, serviceInfo, new SimpleActionListener("SendActionListener")); 
-    }*/
-
-
-
-    /*public void StartDiscovery(Action<string, string> onUserFound, Action<string, string> onDeviceFound)
-    {
-
-         if (_manager == null || _channel == null) return;
-
-        // Listener für DNS-SD Antworten
-        _manager.SetDnsSdResponseListeners(_channel, new MyServiceResponseListener(), new MyTxtRecordListener(onUserFound));
-
-        
-
-        // 1. Definiere, was passieren soll, wenn der Receiver ein Signal bekommt
-        receiver = new WifiDirectBroadcastReceiver(_manager, _channel, onDeviceFound);
-
-        // 2. Registriere den Receiver im Android-System
-        var intentFilter = new IntentFilter();
-        intentFilter.AddAction(WifiP2pManager.WifiP2pPeersChangedAction);
-        _context.RegisterReceiver(receiver, intentFilter);
-
-        _manager.DiscoverPeers(_channel, new SimpleActionListener("PeerDiscovery"));
-
-        _manager.AddServiceRequest(_channel, WifiP2pDnsSdServiceRequest.NewInstance(), new SimpleActionListener("DiscoveryActionListenerRequest"));
-        _manager.DiscoverServices(_channel, new SimpleActionListener("DiscoveryActionListener")); 
-    }*/
 }

@@ -9,6 +9,7 @@ public class MyTxtRecordListener : Java.Lang.Object, WifiP2pManager.IDnsSdTxtRec
 
     public void OnDnsSdTxtRecordAvailable(string fullDomainName, System.Collections.Generic.IDictionary<string, string>? txtRecordMap, Android.Net.Wifi.P2p.WifiP2pDevice? srcDevice)
     {
+        Console.WriteLine("OnDnsSdTxtRecord: " + txtRecordMap?.Count);
         if (txtRecordMap != null && txtRecordMap.ContainsKey("userName"))
         {
             var name = txtRecordMap["userName"];
