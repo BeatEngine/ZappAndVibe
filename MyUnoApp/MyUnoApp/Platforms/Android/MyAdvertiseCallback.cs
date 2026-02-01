@@ -20,4 +20,10 @@ public class MyAdvertiseCallback : AdvertiseCallback
         
     }
 
+    public override void OnStartFailure(AdvertiseFailure errorCode)
+    {
+        // Fehler 1 = Data Too Large!
+        Console.WriteLine($"BLE Advertise Failed: {errorCode}");
+    }
+
 }

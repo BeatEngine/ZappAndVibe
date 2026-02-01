@@ -12,9 +12,9 @@ namespace MyUnoApp.Platforms.Android;
 public class MyBLEScanCallback : ScanCallback
 {
 
-    private Action<string, string> onPeerFound;
+    private Action<int, string, string> onPeerFound;
 
-    public MyBLEScanCallback(Action<string, string> onFound = null)
+    public MyBLEScanCallback(Action<int, string, string> onFound = null)
     {
         this.onPeerFound = onFound;
     }
@@ -34,7 +34,7 @@ public class MyBLEScanCallback : ScanCallback
             return;
 
         // Name
-        string name = record.DeviceName;
+        string name;
 
         string age = "null";
 
@@ -43,7 +43,10 @@ public class MyBLEScanCallback : ScanCallback
         if (manufacturerData == null)
             return;
 
-        string text = System.Text.UTF8Encoding.UTF8.GetString(manufacturerData);
+        int userId = BitConverter.ToInt32(manufacturerData, 0);
+
+        string text = System.Text.Encoding.GetEncoding("Windows-1252").GetString(manufacturerData[4..]);
+        name = text;
         int i = text.IndexOf('|');
         if (i != -1)
         {
@@ -51,7 +54,7 @@ public class MyBLEScanCallback : ScanCallback
             age = text.Substring(i + 1);
         }
         Console.WriteLine($"Found: Name={name}, Age={age}");
-        this?.onPeerFound.Invoke(name, age);
+        this?.onPeerFound.Invoke(userId, name, age);
     }
 }
 

@@ -11,8 +11,9 @@ public class BleBridge
     public static string name = "test-";
     public static string age = "26";
     public static string image = "";
+    public static int userId = Guid.NewGuid().GetHashCode();
     // Die MainPage abonniert dies, um Daten zu empfangen
-    public static Action<string, string>? OnUserDiscovered;
+    public static Action<int, string, string>? OnUserDiscovered;
 
     public static bool active = false;
     public static IAndroidUtil androidUtil { get; set; }
@@ -26,7 +27,7 @@ public class BleBridge
         name = res.Item1;
         age = res.Item2;
     }
-    public static void toggleScanning()
+    public static bool toggleScanning()
     {
         if(active)
         {
@@ -37,11 +38,16 @@ public class BleBridge
         else
         {
             initNames();
-            androidUtil.checkRequirementsBLEDiscovery();
-            bleService.StartBleAdvertiser(name, age);
+            if (!androidUtil.checkRequirementsBLEDiscovery())
+            {
+                return false;
+            }
+            bleService.StartBleAdvertiser(userId, name, age);
             bleService.StartBleScan(OnUserDiscovered);
             active = true;
+            
         }
+        return true;
     }
 
 }

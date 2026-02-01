@@ -9,8 +9,8 @@ namespace MyUnoApp;
 public interface IBleService
 {
   
-    void StartBleAdvertiser(string name, string age);
+    void StartBleAdvertiser(int userId, string name, string age);
     void StopBleAdvertiser();
-    void StartBleScan(Action<string, string> onPeerFound);
+    void StartBleScan(Action<int, string, string> onPeerFound);
     void StopBleScan();
 }

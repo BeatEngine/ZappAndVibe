@@ -19,7 +19,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
     private Context _context;
     private static IBleService instance;
 
-    public Action<string, string> lastAction;
+    public Action<int, string, string> lastAction;
     public static IBleService GetInstance()
     {
         return instance;
@@ -37,7 +37,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
     private MyAdvertiseCallback callback;
     private MyBLEScanCallback scanCallback;
 
-    public void StartBleAdvertiser(string name, string age)
+    public void StartBleAdvertiser(int userId, string name, string age)
     {
         bluetoothManager = (BluetoothManager)_context.GetSystemService(Context.BluetoothService);
         adapter = bluetoothManager.Adapter;
@@ -56,14 +56,20 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
 
         // Manufacturer Data: Age = 25
         string text = name + "|" + age;
-        if(text.Length > 24)
+        if(text.Length > 20)
         {
-            text = text.Substring(0, 24);
+            text = text.Substring(0, 20);
         }
-        byte[] ageData = System.Text.Encoding.UTF8.GetBytes(text);
-        
+        byte[] ageData = System.Text.Encoding.GetEncoding("Windows-1252").GetBytes(text);
+
+        Span<byte> userIdSpan = stackalloc byte[4];
+        BitConverter.TryWriteBytes(userIdSpan, userId);
+        byte[] combined = new byte[userIdSpan.Length + ageData.Length];
+        userIdSpan.CopyTo(combined.AsSpan());
+        ageData.CopyTo(combined.AsSpan(userIdSpan.Length));
+
         var data = new AdvertiseData.Builder()
-            .AddManufacturerData(0x1234, ageData) // 0x1234 = eigene App-ID
+            .AddManufacturerData(0x1234, combined) // 0x1234 = eigene App-ID
             .SetIncludeDeviceName(false)
             .Build();
 
@@ -71,7 +77,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         advertiser.StartAdvertising(settings, data, callback);
     }
 
-    public void StartBleScan(Action<string, string> onPeerFound)
+    public void StartBleScan(Action<int, string, string> onPeerFound)
     {
         scanner = adapter.BluetoothLeScanner;
         lastAction = onPeerFound;

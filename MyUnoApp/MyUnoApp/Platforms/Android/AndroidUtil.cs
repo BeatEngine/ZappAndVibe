@@ -10,6 +10,7 @@ using Android.Locations;
 using MyUnoApp.Droid;
 using Java.Util;
 using static Java.Util.Jar.Attributes;
+using Android.Bluetooth;
 
 namespace MyUnoApp.Platforms.Android;
 
@@ -32,6 +33,15 @@ public class AndroidUtil : Java.Lang.Object, IAndroidUtil
                locationManager.IsProviderEnabled(LocationManager.NetworkProvider);
     }
 
+    public bool IsBluethoothServiceEnabled()
+    {
+        var bluetoothManager = (BluetoothManager)_context.GetSystemService(Context.BluetoothService);
+        var adapter = bluetoothManager?.Adapter;
+
+        // Prüfen, ob der Adapter existiert und eingeschaltet ist
+        return adapter != null && adapter.IsEnabled;
+    }
+
     public void OpenLocationSettings()
     {
         var intent = new Intent(Settings.ActionLocationSourceSettings);
@@ -39,15 +49,31 @@ public class AndroidUtil : Java.Lang.Object, IAndroidUtil
         _context.StartActivity(intent);
     }
 
-    public void checkRequirementsBLEDiscovery()
+    public void OpenBluethoothSettings()
+    {
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ActionRequestEnable);
+        enableBtIntent.SetFlags(ActivityFlags.NewTask);
+        _context.StartActivity(enableBtIntent);
+    }
+
+    public bool checkRequirementsBLEDiscovery()
     {
         if(!IsLocationServiceEnabled())
         {
             OpenLocationSettings();
+            return false;
         }
+        if (!IsBluethoothServiceEnabled())
+        {
+            OpenBluethoothSettings();
+            return false;
+        }
+
+        return true;
     }
     public (string, string) initNames()
     {
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
         // In deinem Android-Projekt oder via #if __ANDROID__
         var deviceName = Settings.Global.GetString(
             _context.ContentResolver,
@@ -68,7 +94,7 @@ public class AndroidUtil : Java.Lang.Object, IAndroidUtil
         {
             name = deviceName;
         }
-        string age = "Android " + Build.VERSION.Release;
+        string age = "" + Build.VERSION.Release;
         Console.WriteLine("This name is " + name + " " + age);
         return (name, age);
     }
