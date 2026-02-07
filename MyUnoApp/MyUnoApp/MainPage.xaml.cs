@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace MyUnoApp;
@@ -9,6 +11,8 @@ public sealed partial class MainPage : Page
 {
 
     private static ListView userListInstance;
+
+    private DateTime last = DateTime.MinValue;
     public MainPage()
     {
 
@@ -16,26 +20,51 @@ public sealed partial class MainPage : Page
         UserList.ItemsSource = new ObservableCollection<UserItem>();
         {
         };
-        userListInstance = UserList;
-        BleBridge.OnUserDiscovered = (userId, name, age) =>
+        Task.Run(async () =>
         {
-            System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
-
-            UserItem update = new UserItem(userId, name, age, "") { IsOnline = true };
+            byte[] imageData = await GetImageBytesFromAssetsAsync();
+            BleBridge.SetImageData(imageData);
+        });
+        userListInstance = UserList;
+        BleBridge.OnDataReceived = (userId, imageBytes) =>
+        {
+            System.Diagnostics.Debug.WriteLine($"Received image for {userId}");
             ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
-            UserItem existingItem = list.FirstOrDefault(x => x.UserId == update.UserId);
+            UserItem existingItem = list.FirstOrDefault(x => x.UserId == userId);
             if (existingItem != null)
             {
                 int index = list.IndexOf(existingItem);
                 list[index].Discard();
-                list[index] = update;
+                list[index].SetImage(imageBytes);
+                list[index].Updated();
             }
-            else
+
+        };
+
+        BleBridge.OnUserDiscovered = (userId, name, age) =>
+        {
+            if ((DateTime.Now - last).TotalSeconds > 0)
             {
-                list.Add(update);
+                last = DateTime.Now;
+                System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
+
+                UserItem update = new UserItem(userId, name, age, "") { IsOnline = true };
+                ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+                UserItem existingItem = list.FirstOrDefault(x => x.UserId == update.UserId);
+                if (existingItem != null)
+                {
+                    int index = list.IndexOf(existingItem);
+                    list[index].Discard();
+                    list[index].Name = name;
+                    list[index].Age = age;
+                    list[index].Updated();
+                }
+                else
+                {
+                    list.Add(update);
+                }
+                
             }
-
-
                     
         };
 
@@ -46,7 +75,14 @@ public sealed partial class MainPage : Page
         return userListInstance;
     }
 
-    private void OnStartScanClicked(object sender, RoutedEventArgs e)
+    public async Task<byte[]> GetImageBytesFromAssetsAsync()
+    {
+        var file = await StorageFile.GetFileFromApplicationUriAsync(new Uri("ms-appx:///Assets/user.png"));
+        var buffer = await FileIO.ReadBufferAsync(file);
+        return buffer.ToArray();
+    }
+
+    private async Task OnStartScanClicked(object sender, RoutedEventArgs e)
     {
         if (BleBridge.toggleScanning())
         {

@@ -75,7 +75,7 @@
                                     CornerRadius="25" 
                                     Background="#333333" 
                                     Margin="0,0,15,0">
-                                <Image Source="{x:Bind ImageUrl}" Stretch="UniformToFill" />
+                                <Image Source="{x:Bind Image}" Stretch="UniformToFill" />
                             </Border>
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">

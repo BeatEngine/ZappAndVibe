@@ -24,7 +24,7 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
 
 
         // Berechtigungen zur Laufzeit anfordern
-        if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Tiramisu)
+        if (Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.Lollipop)
         {
             RequestPermissions(new string[] {
                 "android.permission.NEARBY_WIFI_DEVICES",
@@ -61,7 +61,7 @@ public class MainActivity : Microsoft.UI.Xaml.ApplicationActivity
         if (BleBridge.active)
         {
             IBleService s = BLEAdvertiser.GetInstance();
-            s.StartBleScan(((BLEAdvertiser)s).lastAction);
+            s.StartBleScan(((BLEAdvertiser)s).lastAction, ((BLEAdvertiser)s).lastActionData);
         }
     }
 

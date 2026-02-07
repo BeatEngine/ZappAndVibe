@@ -1,17 +1,35 @@
 using System.ComponentModel;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace MyUnoApp;
 
-
+[Microsoft.UI.Xaml.Data.Bindable]
 public class UserItem : INotifyPropertyChanged
 {
     public int UserId { get; set; } = 0;
     public string Name { get; set; } = string.Empty;
     public string Age { get; set; } = string.Empty;
     public bool IsOnline { get; set; } = false;
-    private readonly Task _offlineTimer;
+    private Task _offlineTimer;
     private CancellationTokenSource _cts;
-    public string ImageUrl { get; set; } = string.Empty;
+    public ImageSource Image { get; set; }
+
+    public async void SetImage(byte[] data)
+    {
+        try
+        {
+            var bitmap = new BitmapImage();
+            using (var ms = new MemoryStream(data))
+            {
+                await bitmap.SetSourceAsync(ms.AsRandomAccessStream());
+            }
+            Image = bitmap;
+            OnPropertyChanged(nameof(Image));
+        }catch (Exception e)
+        {
+            Console.WriteLine("SetImage error: " + e.Message);
+        }
+    }
 
     public UserItem()
     {
@@ -22,7 +40,6 @@ public class UserItem : INotifyPropertyChanged
     {
         this.Name = Name;
         this.Age = Age;
-        this.ImageUrl = image;
     }
 
     public UserItem(int userId, string Name, string Age, string image)
@@ -30,8 +47,13 @@ public class UserItem : INotifyPropertyChanged
         this.UserId = userId;
         this.Name = Name;
         this.Age = Age;
-        this.ImageUrl = image;
 
+        Updated();
+
+    }
+
+    public void Updated()
+    {
         _cts = new CancellationTokenSource();
         _offlineTimer = new Task(async () => {
             try
@@ -47,13 +69,12 @@ public class UserItem : INotifyPropertyChanged
                     OnPropertyChanged(nameof(IsOnline));
                 });
             }
-            catch (TaskCanceledException)
+            catch (Exception e)
             {
-                Console.WriteLine("UI Online");
+                //Console.WriteLine("UI Online");
             }
         });
         _offlineTimer.Start();
-
     }
 
     public void Discard()

@@ -20,6 +20,8 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
     private static IBleService instance;
 
     public Action<int, string, string> lastAction;
+    public Action<int, byte[]> lastActionData;
+
     public static IBleService GetInstance()
     {
         return instance;
@@ -36,6 +38,9 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
     private BluetoothLeScanner scanner;
     private MyAdvertiseCallback callback;
     private MyBLEScanCallback scanCallback;
+    private MyGattServerProvider gattProvider;
+
+    private byte[] tmp = null;
 
     public void StartBleAdvertiser(int userId, string name, string age)
     {
@@ -75,18 +80,42 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
 
         Console.WriteLine("Starting BLE advertiser");
         advertiser.StartAdvertising(settings, data, callback);
+        gattProvider = new MyGattServerProvider(_context, userId);
+        if(tmp != null)
+        {
+            gattProvider.fullImageData = tmp;
+        }
+        gattProvider.StartServer();
     }
 
-    public void StartBleScan(Action<int, string, string> onPeerFound)
+    public void SetImageData(byte[] data)
+    {
+        if (gattProvider == null)
+        {
+            tmp = data;
+        }
+        else
+        {
+            gattProvider.fullImageData = data;
+        }
+    }
+
+    public void StartBleScan(Action<int, string, string> onPeerFound, Action<int, byte[]> onReceivedData)
     {
         scanner = adapter.BluetoothLeScanner;
         lastAction = onPeerFound;
+        lastActionData = onReceivedData;
         var settings = new ScanSettings.Builder()
             .SetScanMode(ScanMode.LowLatency)
             .Build();
-        scanCallback = new MyBLEScanCallback(lastAction);
+        scanCallback = new MyBLEScanCallback(lastAction, lastActionData, _context);
         Console.WriteLine("Starting BLE scanner");
         scanner.StartScan(null, settings, scanCallback);
+    }
+
+    public void ReStartBleScan()
+    {
+        StartBleScan(lastAction, lastActionData);
     }
 
     void IBleService.StopBleAdvertiser()
@@ -99,6 +128,8 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         callback = null;
         advertiser = null;
         Console.WriteLine("Stopped BLE advertiser");
+       gattProvider.StopServer();
+        gattProvider = null;
     }
 
     void IBleService.StopBleScan()
@@ -112,5 +143,10 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         scanCallback = null;
         scanner = null;
         Console.WriteLine("Stopped BLE scanner");
+    }
+
+    public Context? getContext()
+    {
+        return _context;
     }
 }

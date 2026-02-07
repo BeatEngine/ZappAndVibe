@@ -15,6 +15,8 @@ public class BleBridge
     // Die MainPage abonniert dies, um Daten zu empfangen
     public static Action<int, string, string>? OnUserDiscovered;
 
+    public static Action<int, byte[]>? OnDataReceived;
+
     public static bool active = false;
     public static IAndroidUtil androidUtil { get; set; }
 
@@ -26,6 +28,11 @@ public class BleBridge
         ValueTuple<string, string> res = androidUtil.initNames();
         name = res.Item1;
         age = res.Item2;
+    }
+
+    public static void SetImageData(byte[] data)
+    {
+        bleService.SetImageData(data);
     }
     public static bool toggleScanning()
     {
@@ -43,7 +50,7 @@ public class BleBridge
                 return false;
             }
             bleService.StartBleAdvertiser(userId, name, age);
-            bleService.StartBleScan(OnUserDiscovered);
+            bleService.StartBleScan(OnUserDiscovered, OnDataReceived);
             active = true;
             
         }

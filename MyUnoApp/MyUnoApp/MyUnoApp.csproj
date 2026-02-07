@@ -34,10 +34,23 @@
     </UnoFeatures>
   </PropertyGroup>
 
+    <ItemGroup>
+        <Content Include="Assets\user.png" />
+    </ItemGroup>
+
   <!-- 2. Spezieller Block NUR für Android -->
   <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
       <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
       <TargetSdkVersion>33</TargetSdkVersion>
   </PropertyGroup>
+
+    <Target Name="Copyapk" AfterTargets="_CopyPackage">
+        <PropertyGroup>
+            <SourceApk>$(OutputPath)com.beatengine.zappnvibe-Signed.apk</SourceApk>
+            <NetworkDest>T:\com.beatengine.zappnvibe-Signed.apk</NetworkDest>
+        </PropertyGroup>
+        <Message Text="Copy apk to networkfolder" Importance="high" />
+        <Exec Command="powershell -ExecutionPolicy Bypass -Command &quot;Start-Process powershell -ArgumentList '-ExecutionPolicy Bypass -Command &quot;&quot;Start-Sleep -Seconds 5; Copy-Item -Path \&quot;$(SourceApk)\&quot; -Destination \&quot;$(NetworkDest)\&quot; -Force&quot;&quot;' -WindowStyle Hidden&quot;" ContinueOnError="true" />
+    </Target>
 
 </Project>
