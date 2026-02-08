@@ -68,14 +68,17 @@
                             Background="{x:Bind IsOnline, Converter={StaticResource StatusColorConverter}, Mode=OneWay}">
                         
                         <Grid ColumnDefinitions="Auto, *">
-                            <!-- Rundes Bild via CornerRadius -->
-                            <Border Grid.Column="0" 
-                                    Width="50" 
-                                    Height="50" 
-                                    CornerRadius="25" 
-                                    Background="#333333" 
-                                    Margin="0,0,15,0">
-                                <Image Source="{x:Bind Image}" Stretch="UniformToFill" />
+                            <!-- Round profile image via Clip -->
+                            <Border Grid.Column="0"
+                                Width="50"
+                                Height="50"
+                                Margin="0,0,15,0"
+                                CornerRadius="25"
+                                BorderBrush="Transparent"
+                                BorderThickness="0"
+                                Background="#333333">
+                                <Image Source="{x:Bind Image, Mode=OneWay}" 
+                                 Stretch="UniformToFill" />
                             </Border>
 
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">

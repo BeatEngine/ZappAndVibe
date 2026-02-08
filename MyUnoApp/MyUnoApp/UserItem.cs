@@ -14,6 +14,8 @@ public class UserItem : INotifyPropertyChanged
     private CancellationTokenSource _cts;
     public ImageSource Image { get; set; }
 
+    public DateTime creation { get; set; }
+
     public async void SetImage(byte[] data)
     {
         try
@@ -25,7 +27,9 @@ public class UserItem : INotifyPropertyChanged
             }
             Image = bitmap;
             OnPropertyChanged(nameof(Image));
-        }catch (Exception e)
+            System.Diagnostics.Debug.WriteLine($"Image set, Size: {data.Length} Bytes");
+        }
+        catch (Exception e)
         {
             Console.WriteLine("SetImage error: " + e.Message);
         }
@@ -54,33 +58,22 @@ public class UserItem : INotifyPropertyChanged
 
     public void Updated()
     {
-        _cts = new CancellationTokenSource();
-        _offlineTimer = new Task(async () => {
-            try
-            {
-                await Task.Delay(3000, _cts.Token);
-                var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread()
-                         ?? MainPage.GetUserList().DispatcherQueue; // Falls GetForCurrentThread null ist
-
-                dispatcher.TryEnqueue(() =>
-                {
-                    Console.WriteLine("UI Offline");
-                    IsOnline = false;
-                    OnPropertyChanged(nameof(IsOnline));
-                });
-            }
-            catch (Exception e)
-            {
-                //Console.WriteLine("UI Online");
-            }
-        });
-        _offlineTimer.Start();
+        creation = DateTime.Now;
+        if(!IsOnline)
+        {
+            IsOnline = true;
+            OnPropertyChanged(nameof(IsOnline));
+        }
     }
 
-    public void Discard()
+    public void SetOffline()
     {
-        _cts?.Cancel();
-        _cts?.Dispose();
+        if (IsOnline)
+        {
+            IsOnline = false;
+            Console.WriteLine($"User {UserId} offline");
+            OnPropertyChanged(nameof(IsOnline));
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

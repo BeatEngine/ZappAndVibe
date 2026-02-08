@@ -4,6 +4,7 @@ using System.Reflection.Metadata;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Windows.System;
 
 namespace MyUnoApp;
 
@@ -12,7 +13,56 @@ public sealed partial class MainPage : Page
 
     private static ListView userListInstance;
 
+    private Task uiUpdateTask;
+    private bool uiUpdateTaskRunning;
+    private CancellationTokenSource uiUpdateCancle = new CancellationTokenSource();
+
     private DateTime last = DateTime.MinValue;
+
+    private void initUserListUiUpdates()
+    {
+        uiUpdateTask = new Task(async () =>
+        {
+            while (true)
+            {
+                if (uiUpdateTaskRunning)
+                {
+                    ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+                    DateTime now = DateTime.Now;
+                    foreach (var item in list.Where(x => (now - x.creation).TotalSeconds > 2))
+                    {
+                        item.SetOffline();
+                    }
+                }
+                await Task.Delay(1500);
+            }
+        });
+        uiUpdateTaskRunning = true;
+        uiUpdateTask.Start();
+
+        Window.Current.VisibilityChanged += (s, e) =>
+        {
+            if (e.Visible)
+            {
+                if (!uiUpdateTaskRunning)
+                {
+                    //uiUpdateCancle = new CancellationTokenSource();
+                    uiUpdateTaskRunning = true;
+                    //uiUpdateTask.Start();
+                }
+            }
+            else
+            {
+                if (uiUpdateTaskRunning)
+                {
+                    uiUpdateTaskRunning = false;
+                    //uiUpdateCancle.Cancel();
+                    //uiUpdateCancle.Dispose();
+                }
+            }
+        };
+    }
+
     public MainPage()
     {
 
@@ -20,24 +70,33 @@ public sealed partial class MainPage : Page
         UserList.ItemsSource = new ObservableCollection<UserItem>();
         {
         };
+        initUserListUiUpdates();
+
         Task.Run(async () =>
         {
             byte[] imageData = await GetImageBytesFromAssetsAsync();
             BleBridge.SetImageData(imageData);
         });
+
         userListInstance = UserList;
         BleBridge.OnDataReceived = (userId, imageBytes) =>
         {
             System.Diagnostics.Debug.WriteLine($"Received image for {userId}");
-            ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+            _ = this.DispatcherQueue.TryEnqueue(() =>
+            {
+            ObservableCollection < UserItem > list = (ObservableCollection<UserItem>)UserList.ItemsSource;
             UserItem existingItem = list.FirstOrDefault(x => x.UserId == userId);
             if (existingItem != null)
             {
                 int index = list.IndexOf(existingItem);
-                list[index].Discard();
-                list[index].SetImage(imageBytes);
                 list[index].Updated();
+                list[index].SetImage(imageBytes);
             }
+
+                //DEBUG SAVE
+                //SaveImageToDiskAsync(userId, imageBytes);
+
+            });
 
         };
 
@@ -54,10 +113,9 @@ public sealed partial class MainPage : Page
                 if (existingItem != null)
                 {
                     int index = list.IndexOf(existingItem);
-                    list[index].Discard();
+                    list[index].Updated();
                     list[index].Name = name;
                     list[index].Age = age;
-                    list[index].Updated();
                 }
                 else
                 {
@@ -68,6 +126,44 @@ public sealed partial class MainPage : Page
                     
         };
 
+    }
+
+    private async Task SaveImageToDiskAsync(long userId, byte[] imageBytes)
+    {
+        try
+        {
+            var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+            savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            savePicker.FileTypeChoices.Add("PNG Image", new List<string>() { ".png" });
+            savePicker.SuggestedFileName = $"User_{userId}.png";
+
+            // Wichtig für Android: Den Picker mit dem Window assoziieren
+            // Uno macht das meist intern, aber sicher ist sicher:
+            var file = await savePicker.PickSaveFileAsync();
+
+            if (file != null)
+            {
+                // Nutze den Stream-Writer statt WriteBytesAsync
+                using (var stream = await file.OpenAsync(Windows.Storage.FileAccessMode.ReadWrite))
+                {
+                    using (var outputStream = stream.GetOutputStreamAt(0))
+                    {
+                        using (var dataWriter = new Windows.Storage.Streams.DataWriter(outputStream))
+                        {
+                            dataWriter.WriteBytes(imageBytes);
+                            await dataWriter.StoreAsync();
+                            await outputStream.FlushAsync(); // WICHTIG: Erzwingt das Schreiben der Bytes
+                        }
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine("Bild erfolgreich gespeichert!");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Bild Speicherfehler: {ex}");
+        }
     }
 
     public static ListView GetUserList()
@@ -97,4 +193,6 @@ public sealed partial class MainPage : Page
             Headline.Text = "Try again";
         }
     }
+
+    
 }
