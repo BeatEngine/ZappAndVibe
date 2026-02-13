@@ -20,15 +20,14 @@ public class MyGattCallback : BluetoothGattCallback
     private readonly Action<int, byte[]> _onImageReceived;
     private readonly List<byte> _imageBuffer = new List<byte>();
 
-    private MyBLEScanCallback _myBLEScanCallback;
     private int _expectedSize = -1;
     private int _userId;
     private byte[] _checksum;
-
-    public MyGattCallback(Action<int, byte[]> onImageReceived, in MyBLEScanCallback myBLEScanCallback)
+    private int _expectedUser;
+    public MyGattCallback(Action<int, byte[]> onImageReceived, int originalUserId)
     {
         _onImageReceived = onImageReceived;
-        _myBLEScanCallback = myBLEScanCallback;
+        _expectedUser = originalUserId;
     }
 
     public override void OnConnectionStateChange(BluetoothGatt gatt, GattStatus status, ProfileState newState)
@@ -102,6 +101,7 @@ public class MyGattCallback : BluetoothGattCallback
 
         if(_expectedSize == -1 && data.Length < 12)
         {
+            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_expectedUser);
             Console.WriteLine("GATT First packet too small: " + data.Length);
             gatt.Disconnect();
         }
@@ -110,6 +110,7 @@ public class MyGattCallback : BluetoothGattCallback
         {
             _expectedSize = BitConverter.ToInt32(data, 0);
             _userId = BitConverter.ToInt32(data[4..], 0);
+            _checksum = new byte[] { 0, 0, 0, 0 };
             Array.Copy(data, 8, _checksum, 0, 4);
             offset = true;
             if (_expectedSize > 0)
@@ -146,8 +147,8 @@ public class MyGattCallback : BluetoothGattCallback
                 else
                 {
                     // Trigger the resend when the userId is found next time
-                    _myBLEScanCallback.ResetFoundUserDevice(_userId);
                     Console.WriteLine("GATT Disconnecting after receiving incomplete");
+                    MyBLEScanCallback.getInstance().ResetFoundUserDevice(_userId);
                 }
                 gatt.Disconnect();
                 _expectedSize = -1;

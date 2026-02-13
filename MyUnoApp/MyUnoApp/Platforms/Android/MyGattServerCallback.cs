@@ -49,7 +49,6 @@ public class MyGattServerCallback : BluetoothGattServerCallback
     {
         try
         {
-
             if (provider.fullImageData == null || provider.fullImageData.Length == 0)
             {
                 Console.WriteLine("GATT no data to send");

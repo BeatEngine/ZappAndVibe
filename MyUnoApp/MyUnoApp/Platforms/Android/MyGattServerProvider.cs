@@ -16,7 +16,7 @@ public class MyGattServerProvider
     private BluetoothManager _bluetoothManager;
     private Context _context;
     public int userId{ get; }
-    public byte[] fullImageData { get; set; } = new byte[0];
+    public byte[] fullImageData { get; set; } = null;
 
     public BluetoothGattServer getServer()
     {

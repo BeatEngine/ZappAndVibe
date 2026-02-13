@@ -20,6 +20,12 @@ public class MyBLEScanCallback : ScanCallback
 
     private Dictionary<int, BluetoothDevice> userDevices = new Dictionary<int, BluetoothDevice>();
 
+    private static MyBLEScanCallback instance;
+    public static MyBLEScanCallback getInstance()
+    {
+        return instance; 
+    }
+
     public void ResetFoundUserDevice(int userId)
     {
         userDevices.Remove(userId);
@@ -34,6 +40,7 @@ public class MyBLEScanCallback : ScanCallback
         this.onPeerFound = onFound;
         this.onPeerReceivedImage = onReceivedData;
         _context = context;
+        instance = this;
     }
 
     public MyBLEScanCallback(IntPtr handle, JniHandleOwnership transfer)
@@ -42,6 +49,7 @@ public class MyBLEScanCallback : ScanCallback
         onPeerFound = ((BLEAdvertiser)BLEAdvertiser.GetInstance()).lastAction;
         onPeerReceivedImage = ((BLEAdvertiser)BLEAdvertiser.GetInstance()).lastActionData;
         _context = ((BLEAdvertiser)BLEAdvertiser.GetInstance()).getContext();
+        instance = this;
     }
 
     public override void OnScanResult(ScanCallbackType callbackType, ScanResult result)
@@ -71,7 +79,7 @@ public class MyBLEScanCallback : ScanCallback
                 if (userDevices.TryAdd(userId, result.Device))
                 {
                     Log.Info(this.Class.SimpleName,$"Request userdata for:{userId}");
-                    gatt = device.ConnectGatt(_context, false, new MyGattCallback(onPeerReceivedImage, this));
+                    gatt = device.ConnectGatt(_context, false, new MyGattCallback(onPeerReceivedImage, userId));
                 }
             }
         }

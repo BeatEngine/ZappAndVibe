@@ -76,11 +76,11 @@ public sealed partial class MainPage : Page
         };
         initUserListUiUpdates();
 
-        Task.Run(async () =>
+        /*Task.Run(async () =>
         {
             byte[] imageData = await GetImageBytesFromAssetsAsync();
             BleBridge.SetImageData(imageData);
-        });
+        });*/
 
         userListInstance = UserList;
         BleBridge.OnDataReceived = (userId, imageBytes) =>
@@ -202,7 +202,7 @@ public sealed partial class MainPage : Page
     {
         if (!setProfile)
         {
-            Task.Run(async () => {
+            Task t = new Task(async () => {
                 byte[] img = await CameraUtil.TakeSelfieAndResizeAsync(200, 200);
                 BleBridge.SetImageData(img);
                 this.DispatcherQueue.TryEnqueue(() =>
@@ -210,7 +210,10 @@ public sealed partial class MainPage : Page
                 SetProfilePicture(img);
                 });
             });
+            t.Start();
             setProfile = true;
+            t.Wait();
+            
         }
         if (BleBridge.toggleScanning())
         {
