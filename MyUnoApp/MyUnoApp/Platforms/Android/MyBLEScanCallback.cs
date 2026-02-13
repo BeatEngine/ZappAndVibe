@@ -20,6 +20,11 @@ public class MyBLEScanCallback : ScanCallback
 
     private Dictionary<int, BluetoothDevice> userDevices = new Dictionary<int, BluetoothDevice>();
 
+    public void ResetFoundUserDevice(int userId)
+    {
+        userDevices.Remove(userId);
+    }
+
     private Context _context;
 
     private BluetoothGatt gatt;
@@ -66,7 +71,7 @@ public class MyBLEScanCallback : ScanCallback
                 if (userDevices.TryAdd(userId, result.Device))
                 {
                     Log.Info(this.Class.SimpleName,$"Request userdata for:{userId}");
-                    gatt = device.ConnectGatt(_context, false, new MyGattCallback(onPeerReceivedImage));
+                    gatt = device.ConnectGatt(_context, false, new MyGattCallback(onPeerReceivedImage, this));
                 }
             }
         }

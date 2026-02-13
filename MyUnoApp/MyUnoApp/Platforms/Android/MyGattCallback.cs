@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Android.Bluetooth;
 using Android.Runtime;
+using System.IO.Hashing;
 
 namespace MyUnoApp.Platforms.Android;
 
@@ -19,13 +20,15 @@ public class MyGattCallback : BluetoothGattCallback
     private readonly Action<int, byte[]> _onImageReceived;
     private readonly List<byte> _imageBuffer = new List<byte>();
 
-    
+    private MyBLEScanCallback _myBLEScanCallback;
     private int _expectedSize = -1;
     private int _userId;
+    private byte[] _checksum;
 
-    public MyGattCallback(Action<int, byte[]> onImageReceived)
+    public MyGattCallback(Action<int, byte[]> onImageReceived, in MyBLEScanCallback myBLEScanCallback)
     {
         _onImageReceived = onImageReceived;
+        _myBLEScanCallback = myBLEScanCallback;
     }
 
     public override void OnConnectionStateChange(BluetoothGatt gatt, GattStatus status, ProfileState newState)
@@ -97,16 +100,17 @@ public class MyGattCallback : BluetoothGattCallback
         }
         bool offset = false;
 
-        if(_expectedSize == -1 && data.Length < 8)
+        if(_expectedSize == -1 && data.Length < 12)
         {
             Console.WriteLine("GATT First packet too small: " + data.Length);
             gatt.Disconnect();
         }
         
-        if (_expectedSize == -1 && data.Length >= 8)
+        if (_expectedSize == -1 && data.Length >= 12)
         {
             _expectedSize = BitConverter.ToInt32(data, 0);
             _userId = BitConverter.ToInt32(data[4..], 0);
+            Array.Copy(data, 8, _checksum, 0, 4);
             offset = true;
             if (_expectedSize > 0)
             {
@@ -119,7 +123,7 @@ public class MyGattCallback : BluetoothGattCallback
 
             if (offset)
             {
-                _imageBuffer.AddRange(data[8..]);
+                _imageBuffer.AddRange(data[12..]);
             }
             else
             {
@@ -132,11 +136,22 @@ public class MyGattCallback : BluetoothGattCallback
                 byte[] finalImage = _imageBuffer.ToArray();
                 _imageBuffer.Clear();
 
-
-                _onImageReceived?.Invoke(_userId, finalImage);
-                Console.WriteLine("GATT Disconnecting after receiving complete");
+                byte[] checksum = XxHash32.Hash(finalImage);
+                // Checking data integrity of whole message
+                if (checksum.SequenceEqual(_checksum))
+                {
+                    _onImageReceived?.Invoke(_userId, finalImage);
+                    Console.WriteLine("GATT Disconnecting after receiving complete");
+                }
+                else
+                {
+                    // Trigger the resend when the userId is found next time
+                    _myBLEScanCallback.ResetFoundUserDevice(_userId);
+                    Console.WriteLine("GATT Disconnecting after receiving incomplete");
+                }
                 gatt.Disconnect();
                 _expectedSize = -1;
+                
             }
         }
         else

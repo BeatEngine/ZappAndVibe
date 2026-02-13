@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Android.Bluetooth;
 using Android.Util;
+using System.IO.Hashing;
 
 namespace MyUnoApp.Platforms.Android;
 
@@ -60,6 +61,7 @@ public class MyGattServerCallback : BluetoothGattServerCallback
             maxChunkSize = Math.Min(maxChunkSize, 512 - 3);
             int sentBytes = 0;
             bool isFirstPacket = true;
+            byte[] checksum = XxHash32.Hash(provider.fullImageData);
             await Task.Delay(30);
             Console.WriteLine($"GATT server sending to {device.Address} chunk-size {maxChunkSize}");
             while (sentBytes < provider.fullImageData.Length)
@@ -68,16 +70,17 @@ public class MyGattServerCallback : BluetoothGattServerCallback
 
                 if (isFirstPacket)
                 {
-                    // Das erste Paket enthält: 8 Bytes Länge + Bilddaten
-                    int dataInFirstPacket = Math.Min(maxChunkSize - 8, provider.fullImageData.Length);
-                    packet = new byte[8 + dataInFirstPacket];
+                    // Das erste Paket enthält: 12 Bytes Länge + Bilddaten
+                    int dataInFirstPacket = Math.Min(maxChunkSize - 12, provider.fullImageData.Length);
+                    packet = new byte[12 + dataInFirstPacket];
 
                     // Länge als Int32 (Little Endian)
                     byte[] lengthHeader = BitConverter.GetBytes(provider.fullImageData.Length);
                     Array.Copy(lengthHeader, 0, packet, 0, 4);
                     byte[] userId = BitConverter.GetBytes(provider.userId);
                     Array.Copy(userId, 0, packet, 4, 4);
-                    Array.Copy(provider.fullImageData, 0, packet, 8, dataInFirstPacket);
+                    Array.Copy(checksum, 0, packet, 8, 4);
+                    Array.Copy(provider.fullImageData, 0, packet, 12, dataInFirstPacket);
 
                     sentBytes += dataInFirstPacket;
                     isFirstPacket = false;

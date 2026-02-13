@@ -38,6 +38,10 @@
         <Content Include="Assets\user.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="System.IO.Hashing" />
+    </ItemGroup>
+
   <!-- 2. Spezieller Block NUR für Android -->
   <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
       <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
