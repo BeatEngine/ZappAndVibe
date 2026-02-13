@@ -24,6 +24,8 @@ public class MyGattCallback : BluetoothGattCallback
     private int _userId;
     private byte[] _checksum;
     private int _expectedUser;
+
+    public static bool receiving = false;
     public MyGattCallback(Action<int, byte[]> onImageReceived, int originalUserId)
     {
         _onImageReceived = onImageReceived;
@@ -34,6 +36,7 @@ public class MyGattCallback : BluetoothGattCallback
     {
         if (status != GattStatus.Success)
         {
+            receiving = false;
             Console.WriteLine("GATT closed");
             gatt.Close();
             return;
@@ -46,6 +49,7 @@ public class MyGattCallback : BluetoothGattCallback
         }
         if (newState == ProfileState.Disconnected)
         {
+            receiving = false;
             Console.WriteLine("GATT disconnected and closing...");
             gatt.Close();
             //((BLEAdvertiser)BLEAdvertiser.GetInstance()).ReStartBleScan();
@@ -91,19 +95,22 @@ public class MyGattCallback : BluetoothGattCallback
 
     public override void OnCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
     {
+        receiving = true;
         byte[] data = characteristic.GetValue();
         if (data == null || data.Length == 0)
         {
             Console.WriteLine($"GATT OnCharacteristicChanged {data}");
+            receiving = false;
             return;
         }
         bool offset = false;
 
         if(_expectedSize == -1 && data.Length < 12)
         {
-            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_expectedUser);
             Console.WriteLine("GATT First packet too small: " + data.Length);
+            receiving = false;
             gatt.Disconnect();
+            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_expectedUser);
         }
         
         if (_expectedSize == -1 && data.Length >= 12)
@@ -141,11 +148,13 @@ public class MyGattCallback : BluetoothGattCallback
                 // Checking data integrity of whole message
                 if (checksum.SequenceEqual(_checksum))
                 {
+                    receiving = false;
                     _onImageReceived?.Invoke(_userId, finalImage);
                     Console.WriteLine("GATT Disconnecting after receiving complete");
                 }
                 else
                 {
+                    receiving = false;
                     // Trigger the resend when the userId is found next time
                     Console.WriteLine("GATT Disconnecting after receiving incomplete");
                     MyBLEScanCallback.getInstance().ResetFoundUserDevice(_userId);

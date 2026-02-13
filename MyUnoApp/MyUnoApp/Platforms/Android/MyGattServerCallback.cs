@@ -15,6 +15,8 @@ public class MyGattServerCallback : BluetoothGattServerCallback
     
     private int _currentMtu = 23; // Standard-Startwert
 
+    public static bool sending = false;
+
     public MyGattServerCallback(MyGattServerProvider prov)
     {
         provider = prov;
@@ -28,6 +30,7 @@ public class MyGattServerCallback : BluetoothGattServerCallback
     // Der Client fordert das Bild an
     public override void OnDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, bool preparedWrite, bool responseNeeded, int offset, byte[] value)
     {
+        sending = true;
         Log.Info(Class.SimpleName, $"Request of {device.Address} for {descriptor.Uuid}");
         if (responseNeeded)
         {
@@ -42,16 +45,32 @@ public class MyGattServerCallback : BluetoothGattServerCallback
             _ = SendImageInChunks(device);
    
         }
-        Console.WriteLine("GATT Client requested something");
+        else
+        {
+            sending = false;
+        }
+            Console.WriteLine("GATT Client requested something");
     }
 
     private async Task SendImageInChunks(BluetoothDevice device)
     {
         try
         {
+            DateTime a = DateTime.Now;
+            while(MyGattCallback.receiving && (DateTime.Now-a).TotalSeconds > 2)
+            {
+                await Task.Delay(100);
+            }
+
+
             if (provider.fullImageData == null || provider.fullImageData.Length == 0)
             {
+                //Send this so the client can make another request.
                 Console.WriteLine("GATT no data to send");
+                byte[] noData = new byte[] { 1, 2, 4, 8 };
+                provider.characteristic.SetValue(noData);
+                bool notified = provider.getServer().NotifyCharacteristicChanged(device, provider.characteristic, false);
+                sending = false;
                 return;
             }
             // Wir berechnen die maximale Datengröße pro Paket

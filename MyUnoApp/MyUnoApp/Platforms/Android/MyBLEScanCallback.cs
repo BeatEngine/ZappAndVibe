@@ -78,6 +78,7 @@ public class MyBLEScanCallback : ScanCallback
             {
                 if (userDevices.TryAdd(userId, result.Device))
                 {
+                    MyGattCallback.receiving = true;
                     Log.Info(this.Class.SimpleName,$"Request userdata for:{userId}");
                     gatt = device.ConnectGatt(_context, false, new MyGattCallback(onPeerReceivedImage, userId));
                 }
@@ -85,6 +86,7 @@ public class MyBLEScanCallback : ScanCallback
         }
         catch (Exception e)
         {
+            MyGattCallback.receiving = false;
             userDevices.Remove(userId);
             Log.Info(this.Class.SimpleName,$"GATT Connection failed: "+e.Message);
         }
