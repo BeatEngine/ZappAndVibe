@@ -57,7 +57,7 @@ public class MyGattServerCallback : BluetoothGattServerCallback
         try
         {
             DateTime a = DateTime.Now;
-            while(MyGattCallback.receiving && (DateTime.Now-a).TotalSeconds > 2)
+            while((provider.fullImageData == null || MyGattCallback.receiving) && (DateTime.Now-a).TotalSeconds > 2)
             {
                 await Task.Delay(100);
             }

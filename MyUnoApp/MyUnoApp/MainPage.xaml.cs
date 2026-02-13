@@ -109,7 +109,7 @@ public sealed partial class MainPage : Page
             if ((DateTime.Now - last).TotalSeconds > 0)
             {
                 last = DateTime.Now;
-                System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
+                //System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
 
                 UserItem update = new UserItem(userId, name, age, "") { IsOnline = true };
                 ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;

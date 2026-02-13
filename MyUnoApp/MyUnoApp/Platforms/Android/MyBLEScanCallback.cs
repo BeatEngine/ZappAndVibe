@@ -74,7 +74,7 @@ public class MyBLEScanCallback : ScanCallback
 
         try
         {
-            if (result.Device != null)
+            if (result.Device != null && !MyGattCallback.receiving)
             {
                 if (userDevices.TryAdd(userId, result.Device))
                 {
@@ -86,7 +86,6 @@ public class MyBLEScanCallback : ScanCallback
         }
         catch (Exception e)
         {
-            MyGattCallback.receiving = false;
             userDevices.Remove(userId);
             Log.Info(this.Class.SimpleName,$"GATT Connection failed: "+e.Message);
         }
@@ -99,7 +98,7 @@ public class MyBLEScanCallback : ScanCallback
             name = text.Substring(0, i);
             age = text.Substring(i + 1);
         }
-        Log.Info(this.Class.SimpleName,$"Found: Name={name}, Age={age}");
+        //Log.Info(this.Class.SimpleName,$"Found: Name={name}, Age={age}");
         this?.onPeerFound.Invoke(userId, name, age);
     }
 }

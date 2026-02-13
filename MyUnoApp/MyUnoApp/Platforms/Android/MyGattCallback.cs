@@ -100,6 +100,8 @@ public class MyGattCallback : BluetoothGattCallback
         if (data == null || data.Length == 0)
         {
             Console.WriteLine($"GATT OnCharacteristicChanged {data}");
+            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_expectedUser);
+            gatt.Disconnect();
             receiving = false;
             return;
         }
@@ -167,6 +169,9 @@ public class MyGattCallback : BluetoothGattCallback
         else
         {
             Console.WriteLine("GATT receiving size 0 ");
+            receiving = false;
+            gatt.Disconnect();
+            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_userId);
         }
     }
 

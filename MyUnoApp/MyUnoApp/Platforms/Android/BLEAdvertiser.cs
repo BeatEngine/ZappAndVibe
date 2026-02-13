@@ -90,11 +90,8 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
 
     public void SetImageData(byte[] data)
     {
-        if (gattProvider == null)
-        {
-            tmp = data;
-        }
-        else
+        tmp = data;
+        if (gattProvider != null)
         {
             gattProvider.fullImageData = data;
         }
