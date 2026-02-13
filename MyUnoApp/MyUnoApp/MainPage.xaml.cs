@@ -5,6 +5,7 @@ using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.System;
 
 namespace MyUnoApp;
@@ -181,25 +182,48 @@ public sealed partial class MainPage : Page
         return buffer.ToArray();
     }
 
+    public async void SetProfilePicture(byte[] imageBytes)
+    {
+        if (imageBytes == null || imageBytes.Length == 0) return;
+
+       // Wir erstellen das BitmapImage auf dem UI-Thread
+        var bitmapImage = new BitmapImage();
+        
+        // Wir nutzen ein InMemoryRandomAccessStream, das unabhängig vom MemoryStream ist
+        var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+        await stream.WriteAsync(imageBytes.AsBuffer());
+        stream.Seek(0); // Zurück zum Anfang springen!
+        await bitmapImage.SetSourceAsync(stream);
+        // 4. Assign to the UI control
+        ProfilePicture.Source = bitmapImage;
+    }
+
     private async Task OnStartScanClicked(object sender, RoutedEventArgs e)
     {
         if (!setProfile)
         {
-            Task.Run(async () => BleBridge.SetImageData(await CameraUtil.TakeSelfieAndResizeAsync(200, 200)));
+            Task.Run(async () => {
+                byte[] img = await CameraUtil.TakeSelfieAndResizeAsync(200, 200);
+                BleBridge.SetImageData(img);
+                this.DispatcherQueue.TryEnqueue(() =>
+                {
+                SetProfilePicture(img);
+                });
+            });
             setProfile = true;
         }
         if (BleBridge.toggleScanning())
+        {
+            Headline.Text = "Scanning";
+        }
+        else
+        {
+            if (sender is ToggleSwitch sw)
             {
-                Headline.Text = "Scanning";
+                sw.IsOn = false;
             }
-            else
-            {
-                if (sender is ToggleSwitch sw)
-                {
-                    sw.IsOn = false;
-                }
-                Headline.Text = "Try again";
-            }
+            Headline.Text = "Try again";
+        }
     }
 
     

@@ -15,20 +15,26 @@
     <Grid RowDefinitions="Auto, *">
         
         <!-- OBERER BEREICH: Switch Button -->
-        <StackPanel Grid.Row="0" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Center" 
+        <Grid Grid.Row="0" 
+                    
                     Padding="20,10"
                     Margin="0,10,0,0"
                     >
+                    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" /> <ColumnDefinition Width="*" />    <ColumnDefinition Width="Auto" /> </Grid.ColumnDefinitions>
+            
+            <StackPanel Grid.Column="0" Grid.ColumnSpan="3" 
+                Orientation="Horizontal" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Center">
             <TextBlock x:Name="Headline"
                        Text="Aktivieren" 
-                       VerticalAlignment="Center" 
+                       VerticalAlignment="Center"
                        Foreground="White" 
                        FontSize="20"
                        Margin="0,0,10,0" />
             
-            <ToggleSwitch AutomationProperties.AutomationId="ActivateSwitch"
+            <ToggleSwitch AutomationProperties.AutomationId="ActivateSwitch" VerticalAlignment="Center"
               OnContent=""
               OffContent="" 
               MinWidth="0"
@@ -53,9 +59,24 @@
         <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#004400" />
         <SolidColorBrush x:Key="ToggleSwitchThumbBackgroundOnPointerOver" Color="White" />
     </ToggleSwitch.Resources>
-</ToggleSwitch>
+    </ToggleSwitch>
+
+    </StackPanel>
+
+    <Border Grid.Column="2"
+        Width="50"
+        Height="50"
+        HorizontalAlignment="Right"  VerticalAlignment="Center"
+        Margin="0,0,15,10"
+        CornerRadius="25"
+        BorderBrush="Transparent"
+        BorderThickness="0"
+        Background="#333333">
+        <Image x:Name="ProfilePicture" 
+            Stretch="UniformToFill" />
+    </Border>
             
-        </StackPanel>
+        </Grid>
 
         <!-- HAUPTBEREICH: Liste -->
         <ListView x:Name="UserList" Grid.Row="1" Padding="10" SelectionMode="None">

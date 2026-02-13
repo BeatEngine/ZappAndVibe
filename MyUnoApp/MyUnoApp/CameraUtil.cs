@@ -18,16 +18,28 @@ public class CameraUtil
 
     private static byte[] ResizeImage(byte[] imageData, int width, int height)
     {
-        using (var ms = new MemoryStream(imageData))
-        using (var bitmap = SKBitmap.Decode(ms))
+        using (var data = SKData.CreateCopy(imageData))
+        using (var bitmap = SKBitmap.Decode(data))
         {
-            // Erstelle ein Ziel-Bitmap
+            if (bitmap == null)
+            {
+                Console.WriteLine("Error no picture");
+                return null;
+            }    
+
             var info = new SKImageInfo(width, height);
             using (var resized = bitmap.Resize(info, SKFilterQuality.High))
-            using (var image = SKImage.FromBitmap(resized))
-            using (var data = image.Encode(SKEncodedImageFormat.Jpeg, 80)) // 80% Qualität
             {
-                return data.ToArray();
+                if (resized == null)
+                {
+                    Console.WriteLine("Error resizing picture");
+                    return null;
+                }
+                using (var image = SKImage.FromBitmap(resized))
+                    using (var encodedData = image.Encode(SKEncodedImageFormat.Jpeg, 80))
+                    {
+                        return encodedData.ToArray();
+                    }
             }
         }
     }
