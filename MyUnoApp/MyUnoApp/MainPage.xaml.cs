@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -15,6 +16,8 @@ public sealed partial class MainPage : Page
 
     private Task uiUpdateTask;
     private bool uiUpdateTaskRunning;
+
+    private bool setProfile = false;
     private CancellationTokenSource uiUpdateCancle = new CancellationTokenSource();
 
     private DateTime last = DateTime.MinValue;
@@ -180,18 +183,23 @@ public sealed partial class MainPage : Page
 
     private async Task OnStartScanClicked(object sender, RoutedEventArgs e)
     {
+        if (!setProfile)
+        {
+            Task.Run(async () => BleBridge.SetImageData(await CameraUtil.TakeSelfieAndResizeAsync(200, 200)));
+            setProfile = true;
+        }
         if (BleBridge.toggleScanning())
-        {
-            Headline.Text = "Scanning";
-        }
-        else
-        {
-            if (sender is ToggleSwitch sw)
             {
-                sw.IsOn = false;
+                Headline.Text = "Scanning";
             }
-            Headline.Text = "Try again";
-        }
+            else
+            {
+                if (sender is ToggleSwitch sw)
+                {
+                    sw.IsOn = false;
+                }
+                Headline.Text = "Try again";
+            }
     }
 
     
