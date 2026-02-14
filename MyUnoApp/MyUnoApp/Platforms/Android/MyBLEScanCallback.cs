@@ -15,13 +15,14 @@ namespace MyUnoApp.Platforms.Android;
 public class MyBLEScanCallback : ScanCallback
 {
 
-    private Action<int, string, string> onPeerFound;
+    private Action<int, string, string, Dictionary<string, object>> onPeerFound;
 
     private Action<int, byte[]> onPeerReceivedImage;
 
     private Dictionary<int, BluetoothDevice> userDevices = new Dictionary<int, BluetoothDevice>();
 
     private Dictionary<int, string> PendingUserNotifications = new Dictionary<int, string>();
+    private HashSet<int> PendingUserPictures = new HashSet<int>();
 
     private static MyBLEScanCallback instance;
     public static MyBLEScanCallback getInstance()
@@ -37,16 +38,21 @@ public class MyBLEScanCallback : ScanCallback
         }
     }
 
-    public void ResetFoundUserDevice(int userId)
+    private void ResetFoundUserDevice(int userId)
     {
         userDevices.Remove(userId);
+    }
+
+    public void CommitReceivedPicture(int userId)
+    {
+        PendingUserPictures.Remove(userId);
     }
 
     private Context _context;
 
     private BluetoothGatt gatt;
 
-    public MyBLEScanCallback(Action<int, string, string> onFound, Action<int, byte[]> onReceivedData, Context context)
+    public MyBLEScanCallback(Action<int, string, string, Dictionary<string, object>> onFound, Action<int, byte[]> onReceivedData, Context context)
     {
         this.onPeerFound = onFound;
         this.onPeerReceivedImage = onReceivedData;
@@ -70,7 +76,7 @@ public class MyBLEScanCallback : ScanCallback
 
         if (record == null)
             return;
-
+        int signalStrength = result.Rssi;
         // Name
         string name;
 
@@ -84,16 +90,23 @@ public class MyBLEScanCallback : ScanCallback
         // Little-Endian
         int userId = System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(manufacturerData);
 
+        if (result.Device != null && userDevices.TryAdd(userId, result.Device))
+        {
+            PendingUserPictures.Add(userId);
+        }
+
         try
         {
-            if (result.Device != null && !MyGattCallback.receiving)
+            if (result.Device != null && !MyGattCallback.receiving && PendingUserPictures.Contains(userId))
             {
-                if (userDevices.TryAdd(userId, result.Device))
+                MyGattCallback.receiving = true;
+                Log.Info(this.Class.SimpleName,$"Request userdata for:{userId}");
+                gatt = device.ConnectGatt(_context, false, new MyGattCallback((uid, img) =>
                 {
-                    MyGattCallback.receiving = true;
-                    Log.Info(this.Class.SimpleName,$"Request userdata for:{userId}");
-                    gatt = device.ConnectGatt(_context, false, new MyGattCallback(onPeerReceivedImage, userId));
-                }
+                    MyBLEScanCallback.getInstance().CommitReceivedPicture(userId);
+                    onPeerReceivedImage.Invoke(uid, img);
+
+                }, userId));
             }
         }
         catch (Exception e)
@@ -134,7 +147,9 @@ public class MyBLEScanCallback : ScanCallback
             age = text.Substring(i + 1);
         }
         //Log.Info(this.Class.SimpleName,$"Found: Name={name}, Age={age}");
-        this?.onPeerFound.Invoke(userId, name, age);
+        Dictionary<string, object> parameters = new Dictionary<string, object>();
+        parameters.TryAdd("signal", signalStrength);
+        this?.onPeerFound.Invoke(userId, name, age, parameters);
     }
 }
 

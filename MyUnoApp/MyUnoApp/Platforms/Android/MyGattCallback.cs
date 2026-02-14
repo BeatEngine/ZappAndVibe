@@ -1,21 +1,10 @@
+using System.IO.Hashing;
 using System;
 using System.Collections.Generic;
-using System.IO.Hashing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Android.Bluetooth;
-using Android.Runtime;
 
 namespace MyUnoApp.Platforms.Android;
 
-using System;
-using System.Collections.Generic;
-using Android;
 using global::Android.Bluetooth;
-using global::Android.Util;
-using Java.Security;
-using static global::Android.Renderscripts.Sampler;
 
 public class MyGattCallback : BluetoothGattCallback
 {
@@ -49,9 +38,9 @@ public class MyGattCallback : BluetoothGattCallback
     {
         if (status != GattStatus.Success)
         {
-            receiving = false;
             Console.WriteLine("GATT closed");
             gatt.Close();
+            receiving = false;
             return;
         }
         if (newState == ProfileState.Connected)
@@ -62,10 +51,10 @@ public class MyGattCallback : BluetoothGattCallback
         }
         if (newState == ProfileState.Disconnected)
         {
-            receiving = false;
+            
             Console.WriteLine("GATT disconnected and closing...");
             gatt.Close();
-            //((BLEAdvertiser)BLEAdvertiser.GetInstance()).ReStartBleScan();
+            receiving = false;
         }
     }
 
@@ -178,7 +167,6 @@ public class MyGattCallback : BluetoothGattCallback
         {
             Console.WriteLine($"GATT OnCharacteristicChanged {data}");
             gatt.Disconnect();
-            receiving = false;
             return;
         }
         bool offset = false;
@@ -186,7 +174,6 @@ public class MyGattCallback : BluetoothGattCallback
         if (_expectedSize == -1 && data.Length < 12)
         {
             Console.WriteLine("GATT First notification-reply too small: " + data.Length);
-            receiving = false;
             gatt.Disconnect();
         }
 
@@ -238,7 +225,6 @@ public class MyGattCallback : BluetoothGattCallback
                 }
                 else
                 {
-                    receiving = false;
                     // Trigger the resend when the userId is found next time
                     Console.WriteLine("GATT Disconnecting after receiving incomplete notification-reply");
                 }
@@ -250,7 +236,6 @@ public class MyGattCallback : BluetoothGattCallback
         else
         {
             Console.WriteLine("GATT receiving size 0 ");
-            receiving = false;
             gatt.Disconnect();
         }
     }
@@ -262,9 +247,7 @@ public class MyGattCallback : BluetoothGattCallback
         if (data == null || data.Length == 0)
         {
             Console.WriteLine($"GATT OnCharacteristicChanged {data}");
-            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_expectedUser);
             gatt.Disconnect();
-            receiving = false;
             return;
         }
         bool offset = false;
@@ -272,9 +255,7 @@ public class MyGattCallback : BluetoothGattCallback
         if (_expectedSize == -1 && data.Length < 12)
         {
             Console.WriteLine("GATT First packet too small: " + data.Length);
-            receiving = false;
             gatt.Disconnect();
-            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_expectedUser);
         }
 
         if (_expectedSize == -1 && data.Length >= 12)
@@ -312,16 +293,13 @@ public class MyGattCallback : BluetoothGattCallback
                 // Checking data integrity of whole message
                 if (checksum.SequenceEqual(_checksum))
                 {
-                    receiving = false;
                     _onImageReceived?.Invoke(_userId, finalImage);
                     Console.WriteLine("GATT Disconnecting after receiving complete");
                 }
                 else
                 {
-                    receiving = false;
                     // Trigger the resend when the userId is found next time
                     Console.WriteLine("GATT Disconnecting after receiving incomplete");
-                    MyBLEScanCallback.getInstance().ResetFoundUserDevice(_userId);
                 }
                 gatt.Disconnect();
                 _expectedSize = -1;
@@ -331,9 +309,7 @@ public class MyGattCallback : BluetoothGattCallback
         else
         {
             Console.WriteLine("GATT receiving size 0 ");
-            receiving = false;
             gatt.Disconnect();
-            MyBLEScanCallback.getInstance().ResetFoundUserDevice(_userId);
         }
     }
 

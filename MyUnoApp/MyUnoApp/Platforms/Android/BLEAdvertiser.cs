@@ -9,6 +9,7 @@ using Android.Bluetooth;
 using Android.Bluetooth.LE;
 using Android.Content;
 using Java.Util;
+using static Android.Hardware.Camera;
 using BluetoothLeAdvertiser = Android.Bluetooth.LE.BluetoothLeAdvertiser;
 using BluetoothLeScanner = Android.Bluetooth.LE.BluetoothLeScanner;
 using ScanMode = Android.Bluetooth.LE.ScanMode;
@@ -20,7 +21,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
     private Context _context;
     private static IBleService instance;
 
-    public Action<int, string, string> lastAction;
+    public Action<int, string, string, Dictionary<string, object>> lastAction;
     public Action<int, byte[]> lastActionData;
     public Action<int, string> lastActionNotification;
 
@@ -109,7 +110,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         }
     }
 
-    public void StartBleScan(Action<int, string, string> onPeerFound, Action<int, byte[]> onReceivedData)
+    public void StartBleScan(Action<int, string, string, Dictionary<string, object>> onPeerFound, Action<int, byte[]> onReceivedData)
     {
         scanner = adapter.BluetoothLeScanner;
         lastAction = onPeerFound;

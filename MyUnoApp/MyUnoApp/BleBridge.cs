@@ -13,7 +13,7 @@ public class BleBridge
     public static string image = "";
     public static int userId = Guid.NewGuid().GetHashCode();
     // Die MainPage abonniert dies, um Daten zu empfangen
-    public static Action<int, string, string>? OnUserDiscovered;
+    public static Action<int, string, string, Dictionary<string, object>>? OnUserDiscovered;
 
     public static Action<int, byte[]>? OnDataReceived;
 

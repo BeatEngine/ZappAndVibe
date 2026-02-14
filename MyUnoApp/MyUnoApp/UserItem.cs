@@ -12,6 +12,10 @@ public class UserItem : INotifyPropertyChanged
     public bool IsOnline { get; set; } = false;
     public bool HasIcebreaker { get; set; } = false;
 
+    public float Distance { get; set; } = 100.0f;
+
+    public string DistanceForm { get; set; } = "";
+
     private Task _offlineTimer;
     private CancellationTokenSource _cts;
     public ImageSource Image { get; set; }
@@ -72,6 +76,45 @@ public class UserItem : INotifyPropertyChanged
         {
             IsOnline = true;
             OnPropertyChanged(nameof(IsOnline));
+        }
+    }
+
+    public string GetFormatedDistance(float dist)
+    {
+        return $"{Distance:N2}";
+    }
+
+    public void UpdateDist(float dist)
+    {
+        if (Distance != dist)
+        {
+            string DistanceFormOld = $"{Distance:N2}";
+            string DistanceFormNew = $"{dist:N2}";
+            Distance = dist;
+            if (!DistanceFormNew.Equals(DistanceFormOld))
+            {
+                DistanceForm = DistanceFormNew;
+                OnPropertyChanged(nameof(DistanceForm));
+            }
+        }
+    }
+
+    public void UpdateByItem(in UserItem other)
+    {
+        UserId = other.UserId;
+        Name = other.Name;
+        Age = other.Age;
+        this.creation = other.creation;
+        bool ud = false;
+        if(Distance != other.Distance)
+        {
+            Distance = other.Distance;
+            OnPropertyChanged(nameof(Distance));
+        }
+        if (Image != other.Image)
+        {
+            Image = other.Image;
+            OnPropertyChanged(nameof(Image));
         }
     }
 

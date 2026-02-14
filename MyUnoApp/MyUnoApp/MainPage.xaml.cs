@@ -18,6 +18,8 @@ public sealed partial class MainPage : Page
     private Task uiUpdateTask;
     private bool uiUpdateTaskRunning;
 
+    private bool setname = false;
+
     private bool setProfile = false;
     private CancellationTokenSource uiUpdateCancle = new CancellationTokenSource();
 
@@ -31,14 +33,27 @@ public sealed partial class MainPage : Page
             {
                 if (uiUpdateTaskRunning)
                 {
-                    ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+
+                    UserList<UserItem> list = (UserList<UserItem>)UserList.ItemsSource;
+                    var sortedList = list.OrderBy(u => u.Distance).ToList();
+                    
                     DateTime now = DateTime.Now;
-                    foreach (var item in list.Where(x => (now - x.creation).TotalSeconds > 2))
+                    foreach (var item in sortedList.Where(x => (now - x.creation).TotalSeconds > 2))
                     {
                         item.SetOffline();
                     }
+                    this.DispatcherQueue.TryEnqueue(() =>
+                    {
+                        list.Sort(u => u.Distance);
+                        /*for(int i = 0; i < sortedList.Count; i++)
+                        {
+                            list[i].UpdateByItem(sortedList[i]);
+                        }*/
+
+                    });
+
                 }
-                await Task.Delay(1500);
+                await Task.Delay(1300);
             }
         });
         uiUpdateTaskRunning = true;
@@ -67,11 +82,19 @@ public sealed partial class MainPage : Page
         };
     }
 
+    private float calcDist(int signal)
+    {
+        double n = 2.0;// 2.0 is ideal (library/open space), 3.0 is a standard office.
+        double measuredPower = -65;
+        double exponent = (measuredPower - signal) / (10 * n);
+        return (float)Math.Pow(10, exponent);
+    }
+
     public MainPage()
     {
 
         this.InitializeComponent();
-        UserList.ItemsSource = new ObservableCollection<UserItem>();
+        UserList.ItemsSource = new UserList<UserItem>();
         {
         };
         initUserListUiUpdates();
@@ -88,7 +111,7 @@ public sealed partial class MainPage : Page
             System.Diagnostics.Debug.WriteLine($"Received image for {userId}");
             _ = this.DispatcherQueue.TryEnqueue(() =>
             {
-            ObservableCollection < UserItem > list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+                UserList< UserItem > list = (UserList<UserItem>)UserList.ItemsSource;
             UserItem existingItem = list.FirstOrDefault(x => x.UserId == userId);
             if (existingItem != null)
             {
@@ -104,15 +127,19 @@ public sealed partial class MainPage : Page
 
         };
 
-        BleBridge.OnUserDiscovered = (userId, name, age) =>
+        BleBridge.OnUserDiscovered = (userId, name, age, parameters) =>
         {
             if ((DateTime.Now - last).TotalSeconds > 0)
             {
                 last = DateTime.Now;
                 //System.Diagnostics.Debug.WriteLine($"Gefunden: {name}, {age}");
 
+                int sig = (int)parameters["signal"];
+                float dist = calcDist(sig);
+
                 UserItem update = new UserItem(userId, name, age, "") { IsOnline = true };
-                ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+                update.Distance = dist;
+                UserList<UserItem> list = (UserList<UserItem>)UserList.ItemsSource;
                 UserItem existingItem = list.FirstOrDefault(x => x.UserId == update.UserId);
                 if (existingItem != null)
                 {
@@ -120,6 +147,7 @@ public sealed partial class MainPage : Page
                     list[index].Updated();
                     list[index].Name = name;
                     list[index].Age = age;
+                    list[index].UpdateDist(dist);
                 }
                 else
                 {
@@ -139,7 +167,7 @@ public sealed partial class MainPage : Page
                 System.Diagnostics.Debug.WriteLine($"Received ice-breaker from {userId}");
                 _ = this.DispatcherQueue.TryEnqueue(() =>
                 {
-                    ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+                    UserList<UserItem> list = (UserList<UserItem>)UserList.ItemsSource;
                     UserItem existingItem = list.FirstOrDefault(x => x.UserId == userId);
                     if (existingItem != null)
                     {
@@ -227,7 +255,7 @@ public sealed partial class MainPage : Page
     {
         if(sender is ToggleSwitch ts)
         {
-            UserList.ItemsSource = new ObservableCollection<UserItem>();
+            UserList.ItemsSource = new UserList<UserItem>();
             {
             }
         }
