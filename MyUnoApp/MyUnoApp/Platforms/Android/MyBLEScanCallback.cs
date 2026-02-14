@@ -9,6 +9,7 @@ using Android.Content;
 using Android.OS;
 using Android.Runtime;
 using Android.Util;
+using Java.Util;
 namespace MyUnoApp.Platforms.Android;
 
 public class MyBLEScanCallback : ScanCallback
@@ -20,10 +21,20 @@ public class MyBLEScanCallback : ScanCallback
 
     private Dictionary<int, BluetoothDevice> userDevices = new Dictionary<int, BluetoothDevice>();
 
+    private Dictionary<int, string> PendingUserNotifications = new Dictionary<int, string>();
+
     private static MyBLEScanCallback instance;
     public static MyBLEScanCallback getInstance()
     {
         return instance; 
+    }
+
+    public void AddNotification(int targetUser,  string notificationBody)
+    {
+        if(PendingUserNotifications.TryAdd(targetUser, notificationBody))
+        {
+            Console.WriteLine($"Added notification for {targetUser} {notificationBody}");
+        }
     }
 
     public void ResetFoundUserDevice(int userId)
@@ -70,7 +81,8 @@ public class MyBLEScanCallback : ScanCallback
         if (manufacturerData == null)
             return;
 
-        int userId = BitConverter.ToInt32(manufacturerData, 0);
+        // Little-Endian
+        int userId = System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(manufacturerData);
 
         try
         {
@@ -88,6 +100,29 @@ public class MyBLEScanCallback : ScanCallback
         {
             userDevices.Remove(userId);
             Log.Info(this.Class.SimpleName,$"GATT Connection failed: "+e.Message);
+        }
+
+        if(result.Device != null && PendingUserNotifications.ContainsKey(userId) && !MyGattCallback.receiving)
+        {
+            try
+            {
+                // Sent pending notifications (e.g. ice-breakers)
+                int thisUserId = MyGattServerProvider.getInstance().userId;
+                string body = PendingUserNotifications[userId];
+            MyGattCallback.receiving = true;
+            Log.Info(this.Class.SimpleName, $"Notification for:{userId}");
+            gatt = device.ConnectGatt(_context, false, new MyGattCallback(null, thisUserId, body, (userId) =>
+                {
+                    Console.WriteLine($"Successfully notificated {userId}");
+                    //If successfull sent remove pending notification
+                    MyBLEScanCallback.getInstance().PendingUserNotifications.Remove(userId);
+                }
+            ));
+            }
+            catch (Exception e)
+            {
+                Log.Info(this.Class.SimpleName, $"GATT Connection notification failed: " + e.Message);
+            }
         }
 
         string text = System.Text.Encoding.GetEncoding("Windows-1252").GetString(manufacturerData[4..]);

@@ -17,6 +17,8 @@ public class BleBridge
 
     public static Action<int, byte[]>? OnDataReceived;
 
+    public static Action<int, string>? OnNotificationReceived;
+
     public static bool active = false;
     public static IAndroidUtil androidUtil { get; set; }
 
@@ -34,6 +36,11 @@ public class BleBridge
     {
         bleService.SetImageData(data);
     }
+
+    public static void SendNotification(int suserId, string jsonNotification)
+    {
+        bleService.SendNotification(suserId, jsonNotification);
+    }
     public static bool toggleScanning()
     {
         if(active)
@@ -49,7 +56,7 @@ public class BleBridge
             {
                 return false;
             }
-            bleService.StartBleAdvertiser(userId, name, age);
+            bleService.StartBleAdvertiser(userId, name, age, OnNotificationReceived);
             bleService.StartBleScan(OnUserDiscovered, OnDataReceived);
             active = true;
             

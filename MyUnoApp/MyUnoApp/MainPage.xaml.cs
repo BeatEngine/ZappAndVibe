@@ -78,8 +78,8 @@ public sealed partial class MainPage : Page
 
         /*Task.Run(async () =>
         {
-            byte[] imageData = await GetImageBytesFromAssetsAsync();
-            BleBridge.SetImageData(imageData);
+            byte[] imageData = await GetImageBytesFromAssetsAsync("heart.png");
+            
         });*/
 
         userListInstance = UserList;
@@ -128,6 +128,31 @@ public sealed partial class MainPage : Page
                 
             }
                     
+        };
+
+
+        BleBridge.OnNotificationReceived = (userId, notification) => {
+
+            if (notification != null && notification.Contains("{\"notification\":\"ice-breaker\"}"))
+            {
+
+                System.Diagnostics.Debug.WriteLine($"Received ice-breaker from {userId}");
+                _ = this.DispatcherQueue.TryEnqueue(() =>
+                {
+                    ObservableCollection<UserItem> list = (ObservableCollection<UserItem>)UserList.ItemsSource;
+                    UserItem existingItem = list.FirstOrDefault(x => x.UserId == userId);
+                    if (existingItem != null)
+                    {
+                        int index = list.IndexOf(existingItem);
+                        list[index].Updated();
+                        list[index].SetIcebreakerReceived();
+                    }
+                    else
+                    {
+                        Console.WriteLine($"No user found with {userId} only ({string.Join(", ", list.Select(u => u.UserId))})");
+                    }
+                });
+            }
         };
 
     }
@@ -200,6 +225,12 @@ public sealed partial class MainPage : Page
 
     private async Task OnStartScanClicked(object sender, RoutedEventArgs e)
     {
+        if(sender is ToggleSwitch ts)
+        {
+            UserList.ItemsSource = new ObservableCollection<UserItem>();
+            {
+            }
+        }
         if (!setProfile)
         {
             Task t = new Task(async () => {
@@ -229,5 +260,17 @@ public sealed partial class MainPage : Page
         }
     }
 
-    
+    private void OnClickUserItem(object sender, Microsoft.UI.Xaml.Input.TappedRoutedEventArgs e)
+    {
+        // The 'sender' is the StackPanel you clicked
+        if (sender is FrameworkElement element && element.DataContext is UserItem clickedUser)
+        {
+            // Now you have the object!
+            Console.WriteLine($"User clicked: {clickedUser.UserId}");
+            // Send ice-breaker
+            BleBridge.SendNotification(clickedUser.UserId, "{\"notification\":\"ice-breaker\"}");
+        }
+    }
+
+
 }

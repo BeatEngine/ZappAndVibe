@@ -36,6 +36,7 @@
 
     <ItemGroup>
         <Content Include="Assets\user.png" />
+        <Content Include="Assets\heart.png" />
     </ItemGroup>
 
     <ItemGroup>

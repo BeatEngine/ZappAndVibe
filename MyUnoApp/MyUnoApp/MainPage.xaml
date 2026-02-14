@@ -102,10 +102,14 @@
                                  Stretch="UniformToFill" />
                             </Border>
 
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Tapped="OnClickUserItem">
                                 <TextBlock Text="{x:Bind Name}" Foreground="White" FontWeight="Bold" FontSize="16" />
                                 <TextBlock Text="{x:Bind Age}" Foreground="#AAAAAA" FontSize="14" />
                             </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center" Tapped="OnClickUserItem" HorizontalAlignment="Right">
+                                <Image Source="ms-appx:///Assets/heart.png" Width="24" Height="24" Visibility="{x:Bind HasIcebreaker, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            </StackPanel>
+
                         </Grid>
                     </Border>
                 </DataTemplate>

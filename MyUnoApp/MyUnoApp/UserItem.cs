@@ -10,12 +10,21 @@ public class UserItem : INotifyPropertyChanged
     public string Name { get; set; } = string.Empty;
     public string Age { get; set; } = string.Empty;
     public bool IsOnline { get; set; } = false;
+    public bool HasIcebreaker { get; set; } = false;
+
     private Task _offlineTimer;
     private CancellationTokenSource _cts;
     public ImageSource Image { get; set; }
 
     public DateTime creation { get; set; }
 
+
+    public async void SetIcebreakerReceived()
+    {
+        Console.WriteLine($"Set Ice-breaker from {Name} ({UserId})");
+        HasIcebreaker = true;
+        OnPropertyChanged(nameof(HasIcebreaker));
+    }
     public async void SetImage(byte[] data)
     {
         try

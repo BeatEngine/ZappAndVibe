@@ -13,10 +13,20 @@ public class MyGattServerProvider
 {
     private BluetoothGattServer _gattServer;
     public BluetoothGattCharacteristic characteristic{ get; set; }
+    public BluetoothGattCharacteristic characteristicJSON { get; set; }
     private BluetoothManager _bluetoothManager;
     private Context _context;
     public int userId{ get; }
+
+    private static MyGattServerProvider instance;
+    public static MyGattServerProvider getInstance()
+    {
+        return instance;
+    }
     public byte[] fullImageData { get; set; } = null;
+
+
+    public Action<int, string> OnNotificationReceived { get; set; } = null;
 
     public BluetoothGattServer getServer()
     {
@@ -25,6 +35,7 @@ public class MyGattServerProvider
 
     public MyGattServerProvider(Context context, int userId)
     {
+        instance = this;
         _context = context;
         this.userId = userId;
         _bluetoothManager = (BluetoothManager)context.GetSystemService(Context.BluetoothService);
@@ -47,16 +58,32 @@ public class MyGattServerProvider
             GattProperty.Read | GattProperty.Notify,
             GattPermission.Read);
 
+        // Characteristic für die Logik (Notifications)
+        // Property: Read (zum Abrufen) oder Notify (zum Streamen)
+        var charUuid2 = Java.Util.UUID.FromString("9e509813-bb73-463a-9371-dafacb86f577");
+        characteristicJSON = new BluetoothGattCharacteristic(
+            charUuid2,
+            GattProperty.Read | GattProperty.Notify |GattProperty.Write,
+            GattPermission.Read | GattPermission.Write);
+
         // CCCD Descriptor hinzufügen ---
         var configUuid = Java.Util.UUID.FromString("00002902-0000-1000-8000-00805f9b34fb");
         var configDescriptor = new BluetoothGattDescriptor(
             configUuid,
             GattDescriptorPermission.Write | GattDescriptorPermission.Read);
 
+        // CCCD Descriptor hinzufügen ---
+        var configDescriptorJSON = new BluetoothGattDescriptor(
+            configUuid,
+            GattDescriptorPermission.Write | GattDescriptorPermission.Read);
+
         characteristic.AddDescriptor(configDescriptor);
+        characteristicJSON.AddDescriptor(configDescriptorJSON);
+
 
         // 4. Service dem Server hinzufügen
         service.AddCharacteristic(characteristic);
+        service.AddCharacteristic(characteristicJSON);
         _gattServer.AddService(service);
     }
 

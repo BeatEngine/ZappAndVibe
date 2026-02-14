@@ -1,16 +1,17 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Android.Bluetooth;
 using Android.Bluetooth.LE;
 using Android.Content;
 using Java.Util;
-using ScanMode = Android.Bluetooth.LE.ScanMode;
 using BluetoothLeAdvertiser = Android.Bluetooth.LE.BluetoothLeAdvertiser;
 using BluetoothLeScanner = Android.Bluetooth.LE.BluetoothLeScanner;
-using System.Security.Cryptography.X509Certificates;
+using ScanMode = Android.Bluetooth.LE.ScanMode;
 
 namespace MyUnoApp.Platforms.Android;
 
@@ -21,6 +22,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
 
     public Action<int, string, string> lastAction;
     public Action<int, byte[]> lastActionData;
+    public Action<int, string> lastActionNotification;
 
     public static IBleService GetInstance()
     {
@@ -42,8 +44,9 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
 
     private byte[] tmp = null;
 
-    public void StartBleAdvertiser(int userId, string name, string age)
+    public void StartBleAdvertiser(int userId, string name, string age, Action<int, string> onNotificationReceived)
     {
+        lastActionNotification = onNotificationReceived;
         bluetoothManager = (BluetoothManager)_context.GetSystemService(Context.BluetoothService);
         adapter = bluetoothManager.Adapter;
 
@@ -68,7 +71,7 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         byte[] ageData = System.Text.Encoding.GetEncoding("Windows-1252").GetBytes(text);
 
         Span<byte> userIdSpan = stackalloc byte[4];
-        BitConverter.TryWriteBytes(userIdSpan, userId);
+        BinaryPrimitives.WriteInt32LittleEndian(userIdSpan, userId);
         byte[] combined = new byte[userIdSpan.Length + ageData.Length];
         userIdSpan.CopyTo(combined.AsSpan());
         ageData.CopyTo(combined.AsSpan(userIdSpan.Length));
@@ -81,7 +84,8 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         Console.WriteLine("Starting BLE advertiser");
         advertiser.StartAdvertising(settings, data, callback);
         gattProvider = new MyGattServerProvider(_context, userId);
-        if(tmp != null)
+        gattProvider.OnNotificationReceived = lastActionNotification;
+        if (tmp != null)
         {
             gattProvider.fullImageData = tmp;
         }
@@ -94,6 +98,14 @@ public class BLEAdvertiser : Java.Lang.Object, IBleService
         if (gattProvider != null)
         {
             gattProvider.fullImageData = data;
+        }
+    }
+
+    public void SendNotification(int userId, string jsonNotification)
+    {
+        if (scanCallback != null)
+        {
+            scanCallback.AddNotification(userId, jsonNotification);
         }
     }
 
