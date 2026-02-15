@@ -20,16 +20,19 @@ public class BleBridge
     public static Action<int, string>? OnNotificationReceived;
 
     public static bool active = false;
-    public static IAndroidUtil androidUtil { get; set; }
+    public static IAndroidUtil androidUtil { get; set; } = null;
 
     public static IBleService bleService { get; set; }
 
     public static bool aktiv = false;
     public static void initNames()
     {
-        ValueTuple<string, string> res = androidUtil.initNames();
-        name = res.Item1;
-        age = res.Item2;
+        if (androidUtil != null)
+        {
+            ValueTuple<string, string> res = androidUtil.initNames();
+            name = res.Item1;
+            age = res.Item2;
+        }
     }
 
     public static void SetImageData(byte[] data)

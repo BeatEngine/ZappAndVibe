@@ -34,6 +34,23 @@
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 
+		<!-- Permissions BLE -->
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>This app needs Bluetooth to find and connect to nearby devices.</string>
+		<key>NSBluetoothPeripheralUsageDescription</key>
+		<string>This app needs Bluetooth to share data with nearby devices.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Location is used to improve Bluetooth device discovery accuracy.</string>
+		
+		<!-- Enable BLE advertising in background -->
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>bluetooth-central</string>
+			<string>bluetooth-peripheral</string>
+		</array>
+		<key>NSBluetoothAlwaysUsageDescription</key>
+		<string>This app advertises your profile to nearby users while in the background.</string>
+
 		<!--
 		Adjust this to your application's encryption usage.
 		<key>ITSAppUsesNonExemptEncryption</key>
