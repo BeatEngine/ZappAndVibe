@@ -155,7 +155,8 @@ public class MyGattServerCallback : BluetoothGattServerCallback
                     packet = new byte[12 + dataInFirstPacket];
 
                     // Länge als Int32 (Little Endian)
-                    byte[] lengthHeader = BitConverter.GetBytes(provider.fullImageData.Length);
+                    byte[] lengthHeader = new byte[4];
+                    System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(lengthHeader, provider.fullImageData.Length);
                     Array.Copy(lengthHeader, 0, packet, 0, 4);
                     byte[] userId = new byte[4];
                     System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(userId, provider.userId);
@@ -233,7 +234,8 @@ public class MyGattServerCallback : BluetoothGattServerCallback
                     packet = new byte[12 + dataInFirstPacket];
 
                     // Länge als Int32 (Little Endian)
-                    byte[] lengthHeader = BitConverter.GetBytes(response.Length);
+                    byte[] lengthHeader = new byte[4];
+                    System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(lengthHeader, response.Length);
                     Array.Copy(lengthHeader, 0, packet, 0, 4);
                     byte[] userId = new byte[4];
                     System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(userId, provider.userId);
