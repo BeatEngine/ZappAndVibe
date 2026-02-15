@@ -1,6 +1,4 @@
 using System.IO.Hashing;
-using System;
-using System.Collections.Generic;
 
 namespace MyUnoApp.Platforms.Android;
 
